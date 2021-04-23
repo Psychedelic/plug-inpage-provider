@@ -1,0 +1,58 @@
+{
+  "name": "@fleekhq/plug-inpage-provider",
+  "version": "1.0.0",
+  "main": "dist/index.js",
+  "module": "dist/esm/index.js",
+  "jsnext:main": "dist/esm/index.js",
+  "types": "dist/index.d.ts",
+  "license": "MIT",
+  "sideEffects": false,
+  "scripts": {
+    "build": "npm run clean && npm-run-all --parallel build:** && node ./scripts/add-package.js",
+    "build:cjs": "tsc --module commonjs --target es2015 --outDir ./dist",
+    "build:esm": "tsc --module es2015 --target es5 --outDir ./dist/esm -d false",
+    "prepublishOnly": "npm run build",
+    "clean": "rimraf ./dist",
+    "lint": "eslint --ext .js,.ts ./src/**",
+    "lint:fix": "npm run lint -- --fix",
+    "test": "jest"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/FleekHQ/plug-inpage-provider.git"
+  },
+  "keywords": [
+    "package",
+    "typescript"
+  ],
+  "author": "Guillermo Puente <guillermo@fleek.co>",
+  "bugs": {
+    "url": "https://github.com/FleekHQ/plug-inpage-provider/issues"
+  },
+  "homepage": "https://github.com/FleekHQ/plug-inpage-provider#readme",
+  "devDependencies": {
+    "@babel/core": "^7.13.16",
+    "@types/jest": "^26.0.22",
+    "@types/react-test-renderer": "^17.0.1",
+    "@types/uuid": "^8.3.0",
+    "@typescript-eslint/eslint-plugin": "^4.22.0",
+    "@typescript-eslint/parser": "^4.22.0",
+    "babel-loader": "^8.2.2",
+    "eslint": "^7.24.0",
+    "eslint-config-airbnb": "^18.2.1",
+    "eslint-plugin-import": "^2.22.1",
+    "husky": "^3.1.0",
+    "jest": "^26.6.3",
+    "lint-staged": "^9.5.0",
+    "npm-run-all": "^4.1.5",
+    "react-test-renderer": "^17.0.2",
+    "rimraf": "^3.0.0",
+    "ts-jest": "^26.5.5",
+    "typescript": "^4.2.4"
+  },
+  "peerDependencies": {},
+  "dependencies": {
+    "@dfinity/agent": "^0.7.1",
+    "@fleekhq/browser-rpc": "^1.0.0"
+  }
+}

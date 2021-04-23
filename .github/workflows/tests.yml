@@ -1,0 +1,25 @@
+name: Tests
+
+on:
+  pull_request:
+    branches:
+      - develop
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        node-version: [14.x]
+    steps:
+    - uses: actions/checkout@v1
+    - uses: actions/setup-node@v1
+      with:
+        node-version: '14.x'
+    - name: install dependencies
+      run: yarn install
+    - name: run lint
+      run: yarn lint
+    - name: run jest
+      run: yarn test --coverage --passWithNoTests
+    - name: test build
+      run: yarn build
