@@ -1,5 +1,6 @@
 import { BrowserRPC } from '@fleekhq/browser-rpc';
-import { Actor, Principal, Agent } from '@dfinity/agent';
+import { Actor, Principal } from '@dfinity/agent';
+import getDomainMetadata from './utils/domain-metadata';
 
 export type ProxyDankCallback = <T extends Actor>(actor: T) => void;
 
@@ -10,7 +11,7 @@ export type WithDankProxy = <T extends Actor>(
 ) => void;
 
 export interface RequestConnectInput {
-  canisters: Principal[];
+  canisters?: Principal[];
   timeout?: number;
 };
 
@@ -18,7 +19,7 @@ export interface ProviderInterface {
   isConnected: boolean;
   principal: Principal;
   withDankProxy: WithDankProxy;
-  requestConnet(input: RequestConnectInput): Promise<Agent>;
+  requestConnect(): Promise<any>; // input: RequestConnectInput // should return Promise<Agent>
 };
 
 export default class Provider implements ProviderInterface {
@@ -32,13 +33,27 @@ export default class Provider implements ProviderInterface {
   }
 
   // @ts-ignore
-  public requestConnet(input: RequestConnectInput): Promise<Agent> {}
+  public async requestConnect(): Promise<any> {
+    const metadata = getDomainMetadata();
+    const icon = metadata.icons[0] || null;
+
+    console.log('inpage metadata', metadata);
+
+    let response = await this.clientRPC.call('requestConnect', [metadata.url, icon], {
+      timeout: 0,
+      target: "",
+    });
+
+    console.log('inpage response', response);
+
+    return response;
+  };
 
   public withDankProxy<T extends Actor>(
     actor: T,
     cb: (actor: T) => void,
     cycles: number,
-  ): void {}
+  ): void { }
 
   public test(name: string): Promise<any> {
     return this.clientRPC.call('test', [name]);
