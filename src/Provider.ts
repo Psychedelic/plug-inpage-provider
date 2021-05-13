@@ -16,14 +16,13 @@ export interface RequestConnectInput {
 };
 
 export interface ProviderInterface {
-  isConnected: boolean;
+  isConnected(): Promise<boolean>;
   principal: Principal;
   withDankProxy: WithDankProxy;
   requestConnect(): Promise<any>; // input: RequestConnectInput // should return Promise<Agent>
 };
 
 export default class Provider implements ProviderInterface {
-  public isConnected = false;
   // @ts-ignore
   public principal: Principal;
   private clientRPC: BrowserRPC;
@@ -32,20 +31,23 @@ export default class Provider implements ProviderInterface {
     this.clientRPC = clientRPC;
   }
 
+  public async isConnected(): Promise<boolean> {
+    const metadata = getDomainMetadata();
+    return await this.clientRPC.call('isConnected', [metadata.url], {
+      timeout: 0,
+      target: "",
+    });
+  };
+
   // @ts-ignore
   public async requestConnect(): Promise<any> {
     const metadata = getDomainMetadata();
     const icon = metadata.icons[0] || null;
 
-    console.log('inpage metadata', metadata);
-
-    let response = await this.clientRPC.call('requestConnect', [metadata.url, icon], {
+    return await this.clientRPC.call('requestConnect', [metadata.url, icon], {
       timeout: 0,
+      target: "",
     });
-
-    console.log('inpage response', response);
-
-    return response;
   };
 
   public withDankProxy<T extends Actor>(
