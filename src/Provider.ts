@@ -1,4 +1,4 @@
-import { BrowserRPC } from '@fleekhq/browser-rpc';
+import BrowserRPC from '@fleekhq/browser-rpc/dist/BrowserRPC';
 import { Actor, Principal } from '@dfinity/agent';
 import getDomainMetadata from './utils/domain-metadata';
 
@@ -41,7 +41,6 @@ export default class Provider implements ProviderInterface {
 
     let response = await this.clientRPC.call('requestConnect', [metadata.url, icon], {
       timeout: 0,
-      target: "",
     });
 
     console.log('inpage response', response);

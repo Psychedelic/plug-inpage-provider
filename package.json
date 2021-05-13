@@ -53,6 +53,6 @@
   "peerDependencies": {},
   "dependencies": {
     "@dfinity/agent": "^0.7.1",
-    "@fleekhq/browser-rpc": "^1.0.0"
+    "@fleekhq/browser-rpc": "^2.0.1"
   }
 }
