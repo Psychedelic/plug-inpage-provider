@@ -367,10 +367,10 @@
     minimatch "^3.0.4"
     strip-json-comments "^3.1.1"
 
-"@fleekhq/browser-rpc@^2.0.1":
-  version "2.0.1"
-  resolved "https://registry.yarnpkg.com/@fleekhq/browser-rpc/-/browser-rpc-2.0.1.tgz#6d1dceb8fb2f735a825beca40ad10e9f7c081500"
-  integrity sha512-JTKq4174/yyZj54HJbqr2Nsgyy8/vS2LMWUCV+jD7GxLMFlI+cnx8fxDX3a8p63kDFJBIG5SoPQjqXn6Awngjw==
+"@fleekhq/browser-rpc@^2.0.2":
+  version "2.0.2"
+  resolved "https://registry.yarnpkg.com/@fleekhq/browser-rpc/-/browser-rpc-2.0.2.tgz#6621a4e9191d45edb267c987b982132bfc83997e"
+  integrity sha512-JDojYoxGF0WmXVhlkvA8oLWk+aaQhuI65ayzahAz69+cZeYlCOkkxTBICz/s40gJgWV6qvPbLMPxUjaCPSZZ/Q==
   dependencies:
     extensionizer "^1.0.1"
     joi "^17.4.0"
