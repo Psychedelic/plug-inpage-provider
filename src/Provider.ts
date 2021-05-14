@@ -44,7 +44,7 @@ export default class Provider implements ProviderInterface {
     const metadata = getDomainMetadata();
     const icon = metadata.icons[0] || null;
 
-    return await this.clientRPC.call('requestConnect', [metadata.url, icon], {
+    return await this.clientRPC.call('requestConnect', [metadata.url, metadata.url, icon], {
       timeout: 0,
       target: "",
     });
@@ -60,4 +60,3 @@ export default class Provider implements ProviderInterface {
     return this.clientRPC.call('test', [name]);
   }
 };
-
