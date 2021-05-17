@@ -15,11 +15,19 @@ export interface RequestConnectInput {
   timeout?: number;
 };
 
+export interface RequestCycleWithdrawal {
+  canisterId: string;
+  methodName: string;
+  parameters: string;
+  cycles: number;
+}
+
 export interface ProviderInterface {
   isConnected(): Promise<boolean>;
   principal: Principal;
   withDankProxy: WithDankProxy;
   requestConnect(): Promise<any>; // input: RequestConnectInput // should return Promise<Agent>
+  requestCycleWithdrawal(requests: RequestCycleWithdrawal[]): Promise<any>;
 };
 
 export default class Provider implements ProviderInterface {
@@ -44,7 +52,16 @@ export default class Provider implements ProviderInterface {
     const metadata = getDomainMetadata();
     const icon = metadata.icons[0] || null;
 
-    return await this.clientRPC.call('requestConnect', [metadata.url, metadata.url, icon], {
+    return await this.clientRPC.call('requestConnect', [metadata.url, metadata.name, icon], {
+      timeout: 0,
+      target: "",
+    });
+  };
+
+  public async requestCycleWithdrawal(requests: RequestCycleWithdrawal[]): Promise<any> {
+    const metadata = getDomainMetadata();
+
+    return await this.clientRPC.call('requestCycleWithdrawal', [metadata, requests], {
       timeout: 0,
       target: "",
     });
