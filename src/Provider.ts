@@ -1,12 +1,12 @@
 import BrowserRPC from '@fleekhq/browser-rpc/dist/BrowserRPC';
-import { Actor, Principal } from '@dfinity/agent';
+import { Actor, HttpAgent, Principal } from '@dfinity/agent';
 import getDomainMetadata from './utils/domain-metadata';
 
 export type ProxyDankCallback = <T extends Actor>(actor: T) => void;
 
 export type WithDankProxy = <T extends Actor>(
   actor: T,
-  cb: (actor: T) => void,
+  callback: (actor: T) => void,
   cycles: number,
 ) => void;
 
@@ -22,11 +22,23 @@ export interface RequestCycleWithdrawal {
   cycles: number;
 }
 
+export interface RequestOptions {
+  cycles: number;
+}
+
+export interface DankProxyRequest {
+  methodName: string;
+  args: any[];
+  options: RequestOptions;
+}
+
 export interface ProviderInterface {
   isConnected(): Promise<boolean>;
   principal: Principal;
-  withDankProxy: WithDankProxy;
-  requestConnect(): Promise<any>; // input: RequestConnectInput // should return Promise<Agent>
+  //withDankProxy(actor: string, methodName: string, args: object, options: RequestOptions): Promise<any>;
+  //withDankProxy(actor: string, request: DankProxyRequest): Promise<any>;
+  withDankProxy(actor: string, requests: DankProxyRequest[]): Promise<any>;
+  requestConnect(input: RequestConnectInput): Promise<HttpAgent | null>;
   requestCycleWithdrawal(requests: RequestCycleWithdrawal[]): Promise<any>;
 };
 
@@ -41,21 +53,29 @@ export default class Provider implements ProviderInterface {
 
   public async isConnected(): Promise<boolean> {
     const metadata = getDomainMetadata();
-    return await this.clientRPC.call('isConnected', [metadata.url], {
+
+    return this.clientRPC.call('isConnected', [metadata.url], {
       timeout: 0,
       target: "",
     });
   };
 
   // @ts-ignore
-  public async requestConnect(): Promise<any> {
+  public async requestConnect(input: RequestConnectInput): Promise<HttpAgent | null> {
     const metadata = getDomainMetadata();
-    const icon = metadata.icons[0] || null;
 
-    return await this.clientRPC.call('requestConnect', [metadata.url, metadata.name, icon], {
+    // i didnt understand what to do with canister ids here
+
+    const response = await this.clientRPC.call('requestConnect', [metadata, input.timeout], {
       timeout: 0,
       target: "",
     });
+
+    if (response) {
+      return new HttpAgent();
+    }
+
+    return null;
   };
 
   public async requestCycleWithdrawal(requests: RequestCycleWithdrawal[]): Promise<any> {
@@ -67,13 +87,20 @@ export default class Provider implements ProviderInterface {
     });
   };
 
-  public withDankProxy<T extends Actor>(
-    actor: T,
-    cb: (actor: T) => void,
-    cycles: number,
-  ): void { }
+  public async withDankProxy(actor: string, requests: DankProxyRequest[]): Promise<any> {
+    const metadata = getDomainMetadata();
 
-  public test(name: string): Promise<any> {
-    return this.clientRPC.call('test', [name]);
+    const proxyRequests = requests.map(r => ({
+      canisterId: actor,
+      methodName: r.methodName,
+      args: r.args,
+      options: r.options,
+    }
+    ));
+
+    return await this.clientRPC.call('dankProxyRequest', [metadata, proxyRequests], {
+      timeout: 0,
+      target: "",
+    });
   }
 };
