@@ -1,6 +1,7 @@
 import BrowserRPC from '@fleekhq/browser-rpc/dist/BrowserRPC';
 import { Actor, HttpAgent, Principal } from '@dfinity/agent';
 import getDomainMetadata from './utils/domain-metadata';
+import { v4 as uuidv4 } from 'uuid';
 
 export type ProxyDankCallback = <T extends Actor>(actor: T) => void;
 
@@ -64,7 +65,7 @@ export default class Provider implements ProviderInterface {
   public async requestConnect(input: RequestConnectInput): Promise<HttpAgent | null> {
     const metadata = getDomainMetadata();
 
-    // i didnt understand what to do with canister ids here
+    // do something with canister ids here
 
     const response = await this.clientRPC.call('requestConnect', [metadata, input.timeout], {
       timeout: 0,
@@ -89,16 +90,20 @@ export default class Provider implements ProviderInterface {
 
   public async withDankProxy(actor: string, requests: DankProxyRequest[]): Promise<any> {
     const metadata = getDomainMetadata();
+    const { url } = metadata;
 
     const proxyRequests = requests.map(r => ({
-      canisterId: actor,
+      id: uuidv4(),
+      canisterId: actor, // get canister id from actor
       methodName: r.methodName,
       args: r.args,
       options: r.options,
+      status: 'pending',
+      url,
     }
     ));
 
-    return await this.clientRPC.call('dankProxyRequest', [metadata, proxyRequests], {
+    return await this.clientRPC.call('dankProxyRequest', [url, proxyRequests], {
       timeout: 0,
       target: "",
     });
