@@ -90,7 +90,7 @@ export default class Provider implements ProviderInterface {
 
   public async withDankProxy(actor: string, requests: DankProxyRequest[]): Promise<any> {
     const metadata = getDomainMetadata();
-    const { url } = metadata;
+    const { url, icons } = metadata;
 
     const proxyRequests = requests.map(r => ({
       id: uuidv4(),
@@ -100,10 +100,11 @@ export default class Provider implements ProviderInterface {
       options: r.options,
       status: 'pending',
       url,
+      icon: icons[0] || null,
     }
     ));
 
-    return await this.clientRPC.call('dankProxyRequest', [url, proxyRequests], {
+    return await this.clientRPC.call('dankProxyRequest', [proxyRequests], {
       timeout: 0,
       target: "",
     });
