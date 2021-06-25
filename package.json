@@ -1,5 +1,5 @@
 {
-  "name": "@fleekhq/plug-inpage-provider",
+  "name": "@psychedelic/plug-inpage-provider",
   "version": "1.0.1",
   "main": "dist/index.js",
   "module": "dist/esm/index.js",
@@ -19,7 +19,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/FleekHQ/plug-inpage-provider.git"
+    "url": "git+https://github.com/Psychedelic/plug-inpage-provider.git"
   },
   "keywords": [
     "package",
@@ -27,9 +27,9 @@
   ],
   "author": "Guillermo Puente <guillermo@fleek.co>",
   "bugs": {
-    "url": "https://github.com/FleekHQ/plug-inpage-provider/issues"
+    "url": "https://github.com/Psychedelic/plug-inpage-provider/issues"
   },
-  "homepage": "https://github.com/FleekHQ/plug-inpage-provider#readme",
+  "homepage": "https://github.com/Psychedelic/plug-inpage-provider#readme",
   "devDependencies": {
     "@babel/core": "^7.13.16",
     "@types/jest": "^26.0.22",
