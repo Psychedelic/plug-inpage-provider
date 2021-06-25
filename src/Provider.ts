@@ -47,8 +47,6 @@ export default class Provider implements ProviderInterface {
       identity,
       host: "https://mainnet.dfinity.network",
     });
-
-    this.clientRPC.start();
   }
 
   public async isConnected(): Promise<boolean> {
