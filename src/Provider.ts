@@ -67,6 +67,14 @@ export default class Provider implements ProviderInterface {
     });
   };
 
+  public async sign(payload: ArrayBuffer): Promise<ArrayBuffer> {
+    const metadata = getDomainMetadata();
+    return await this.clientRPC.call('sign', [metadata.url, payload], {
+      timeout: 0,
+      target: "",
+    });
+  };
+
   public withDankProxy<T extends Actor>(
     actor: T,
     cb: (actor: T) => void,
