@@ -1,6 +1,7 @@
 import BrowserRPC from '@fleekhq/browser-rpc/dist/BrowserRPC';
-import { Actor, Principal } from '@dfinity/agent';
+import { Actor, Principal, Agent, HttpAgent, DerEncodedBlob } from '@dfinity/agent';
 import getDomainMetadata from './utils/domain-metadata';
+import { PlugIdentity } from './identity';
 
 export type ProxyDankCallback = <T extends Actor>(actor: T) => void;
 
@@ -25,18 +26,32 @@ export interface RequestCycleWithdrawal {
 export interface ProviderInterface {
   isConnected(): Promise<boolean>;
   principal: Principal;
+  agent: Agent;
   withDankProxy: WithDankProxy;
   requestConnect(): Promise<any>; // input: RequestConnectInput // should return Promise<Agent>
   requestCycleWithdrawal(requests: RequestCycleWithdrawal[]): Promise<any>;
 };
 
 export default class Provider implements ProviderInterface {
+  
+  // @ts-ignore
+  public agent: Agent;
+  
   // @ts-ignore
   public principal: Principal;
   private clientRPC: BrowserRPC;
 
-  constructor(clientRPC: BrowserRPC) {
+  constructor(clientRPC: BrowserRPC, publicKey: DerEncodedBlob) {
     this.clientRPC = clientRPC;
+
+    const identity = new PlugIdentity(publicKey, clientRPC);
+
+    this.agent = new HttpAgent({
+      identity,
+      host: "https://mainnet.dfinity.network",
+    });
+
+    this.clientRPC.start();
   }
 
   public async isConnected(): Promise<boolean> {
