@@ -33,10 +33,10 @@ export interface ProviderInterface {
 };
 
 export default class Provider implements ProviderInterface {
-  
+
   // @ts-ignore
   public agent: Agent;
-  
+
   // @ts-ignore
   public principal: Principal;
   private clientRPC: BrowserRPC;
@@ -44,7 +44,7 @@ export default class Provider implements ProviderInterface {
   constructor(clientRPC: BrowserRPC, publicKey: DerEncodedBlob) {
     this.clientRPC = clientRPC;
 
-    const identity = new PlugIdentity(publicKey, clientRPC);
+    const identity = new PlugIdentity(publicKey, this.sign);
 
     this.agent = new HttpAgent({
       identity,

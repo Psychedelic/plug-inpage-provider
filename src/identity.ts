@@ -1,14 +1,11 @@
 import { SignIdentity, PublicKey, BinaryBlob, DerEncodedBlob } from '@dfinity/agent';
 import BrowserRPC from '@fleekhq/browser-rpc/dist/BrowserRPC';
 
-export class PlugIdentity extends SignIdentity {
-  private publicKey: DerEncodedBlob;
-  private clientRPC: BrowserRPC;
+type SignCb = (payload: ArrayBuffer) => Promise<ArrayBuffer>;
 
-  constructor(publicKey: DerEncodedBlob, clientRPC: BrowserRPC) {
+export class PlugIdentity extends SignIdentity {
+  constructor(private publicKey: DerEncodedBlob, private signCb: SignCb) {
     super();
-    this.publicKey = publicKey;
-    this.clientRPC = clientRPC;
   }
 
   getPublicKey(): PublicKey {
@@ -18,11 +15,6 @@ export class PlugIdentity extends SignIdentity {
   }
 
   async sign(blob: BinaryBlob): Promise<BinaryBlob> {
-    const result = await this.clientRPC.call('requestSignature', [blob], {
-        timeout: 0,
-        target: "",
-      });
-
-    return result as BinaryBlob;
-  } 
-} 
+    // TODO perform the conversion from ArrayBuffer.
+  }
+}
