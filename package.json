@@ -1,6 +1,6 @@
 {
-  "name": "@fleekhq/plug-inpage-provider",
-  "version": "1.0.1",
+  "name": "@psychedelic/plug-inpage-provider",
+  "version": "1.0.2-beta.1",
   "main": "dist/index.js",
   "module": "dist/esm/index.js",
   "jsnext:main": "dist/esm/index.js",
@@ -20,6 +20,9 @@
   "repository": {
     "type": "git",
     "url": "git+https://github.com/FleekHQ/plug-inpage-provider.git"
+  },
+  "publishConfig": {
+    "registry": "https://npm.pkg.github.com/@psychedelic"
   },
   "keywords": [
     "package",
