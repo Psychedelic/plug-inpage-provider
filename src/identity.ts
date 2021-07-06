@@ -1,5 +1,5 @@
+import { Buffer } from 'buffer/';
 import { SignIdentity, PublicKey, BinaryBlob, DerEncodedBlob } from '@dfinity/agent';
-import BrowserRPC from '@fleekhq/browser-rpc/dist/BrowserRPC';
 
 type SignCb = (payload: ArrayBuffer) => Promise<ArrayBuffer>;
 
@@ -15,6 +15,8 @@ export class PlugIdentity extends SignIdentity {
   }
 
   async sign(blob: BinaryBlob): Promise<BinaryBlob> {
-    // TODO perform the conversion from ArrayBuffer.
+    const ab = blob.buffer.slice(blob.byteOffset, blob.byteOffset + blob.byteLength);
+    const res = await this.signCb(ab);
+    return Buffer.from(res) as BinaryBlob;
   }
 }
