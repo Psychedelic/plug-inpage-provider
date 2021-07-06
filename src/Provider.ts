@@ -13,7 +13,22 @@ export type WithDankProxy = <T extends Actor>(
 export interface RequestConnectInput {
   canisters?: Principal[];
   timeout?: number;
-};
+}
+
+export interface TimeStamp { 'timestamp_nanos' : bigint }
+
+export interface SendOpts {
+  fee?: bigint;
+  memo?: bigint;
+  from_subaccount?: number;
+  created_at_time?: TimeStamp;
+}
+
+interface SendICPArgs {
+  to: string;
+  amount: bigint;
+  opts?: SendOpts;
+}
 
 export interface RequestCycleWithdrawal {
   canisterId: string;
@@ -26,6 +41,8 @@ export interface ProviderInterface {
   isConnected(): Promise<boolean>;
   principal: Principal;
   withDankProxy: WithDankProxy;
+  requestBalance(accountId: string): Promise<bigint>;
+  requestTransfer(args: SendICPArgs): Promise<bigint>;
   requestConnect(): Promise<any>; // input: RequestConnectInput // should return Promise<Agent>
   requestCycleWithdrawal(requests: RequestCycleWithdrawal[]): Promise<any>;
 };
@@ -66,6 +83,20 @@ export default class Provider implements ProviderInterface {
       target: "",
     });
   };
+
+  public async requestBalance(accountId: string): Promise<bigint> {
+    return await this.clientRPC.call('requestBalance', [accountId], {
+      timeout: 0,
+      target: "",
+    })
+  }
+
+  public async requestTransfer(args: SendICPArgs): Promise<bigint> {
+    return await this.clientRPC.call('requestTransfer', [args], {
+      timeout: 0,
+      target: "",
+    })
+  }
 
   public withDankProxy<T extends Actor>(
     actor: T,
