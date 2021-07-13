@@ -58,6 +58,7 @@ export default class Provider implements ProviderInterface {
 
   public async isConnected(): Promise<boolean> {
     const metadata = getDomainMetadata();
+    
     return await this.clientRPC.call('isConnected', [metadata.url], {
       timeout: 0,
       target: "",
@@ -85,14 +86,18 @@ export default class Provider implements ProviderInterface {
   };
 
   public async requestBalance(accountId: number): Promise<bigint> {
-    return await this.clientRPC.call('requestBalance', [accountId], {
+    const metadata = getDomainMetadata();
+
+    return await this.clientRPC.call('requestBalance', [metadata, accountId], {
       timeout: 0,
       target: "",
     })
   }
 
   public async requestTransfer(args: SendICPArgs): Promise<bigint> {
-    return await this.clientRPC.call('requestTransfer', [args], {
+    const metadata = getDomainMetadata();
+
+    return await this.clientRPC.call('requestTransfer', [metadata, args], {
       timeout: 0,
       target: "",
     })
