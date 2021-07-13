@@ -41,7 +41,7 @@ export interface ProviderInterface {
   isConnected(): Promise<boolean>;
   principal: Principal;
   withDankProxy: WithDankProxy;
-  requestBalance(accountId: string): Promise<bigint>;
+  requestBalance(accountId: number): Promise<bigint>;
   requestTransfer(args: SendICPArgs): Promise<bigint>;
   requestConnect(): Promise<any>; // input: RequestConnectInput // should return Promise<Agent>
   requestCycleWithdrawal(requests: RequestCycleWithdrawal[]): Promise<any>;
@@ -84,7 +84,7 @@ export default class Provider implements ProviderInterface {
     });
   };
 
-  public async requestBalance(accountId: string): Promise<bigint> {
+  public async requestBalance(accountId: number): Promise<bigint> {
     return await this.clientRPC.call('requestBalance', [accountId], {
       timeout: 0,
       target: "",
