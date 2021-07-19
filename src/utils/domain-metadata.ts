@@ -2,16 +2,25 @@ const getDomainMetadata = () => {
   const url = window.location.origin;
   const name = getName();
   const icons = getIcons();
+  const pageWidth = getPageWidth();
 
   return {
     url,
     name,
     icons,
+    pageWidth,
   };
 };
 
 export default getDomainMetadata;
 
+const getPageWidth = () => {
+  const win = window,
+    doc = document,
+    docElem = doc.documentElement,
+    body = doc.getElementsByTagName('body')[0];
+  return win.innerWidth || docElem.clientWidth || body.clientWidth;
+};
 
 const getName = () => {
 
