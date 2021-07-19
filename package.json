@@ -1,6 +1,6 @@
 {
   "name": "@psychedelic/plug-inpage-provider",
-  "version": "1.0.2-beta.1",
+  "version": "1.0.3",
   "main": "dist/index.js",
   "module": "dist/esm/index.js",
   "jsnext:main": "dist/esm/index.js",
@@ -15,7 +15,8 @@
     "clean": "rimraf ./dist",
     "lint": "eslint --ext .js,.ts ./src/**",
     "lint:fix": "npm run lint -- --fix",
-    "test": "jest"
+    "test": "jest",
+    "publish": "npm run build && npm publish"
   },
   "repository": {
     "type": "git",
