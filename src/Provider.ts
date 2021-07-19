@@ -25,7 +25,7 @@ interface SendICPArgs {
 export interface ProviderInterface {
   isConnected(): Promise<boolean>;
   principal: Principal;
-  requestBalance(accountId: number): Promise<bigint>;
+  requestBalance(accountId?: number): Promise<bigint>;
   requestTransfer(args: SendICPArgs): Promise<bigint>;
   requestConnect(): Promise<any>;
 };
