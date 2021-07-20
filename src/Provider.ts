@@ -16,7 +16,8 @@ export interface SendOpts {
   created_at_time?: TimeStamp;
 }
 
-interface SendICPArgs {
+// The amount in e8s (ICPs)
+interface SendICPTsArgs {
   to: string;
   amount: bigint;
   opts?: SendOpts;
@@ -26,7 +27,7 @@ export interface ProviderInterface {
   isConnected(): Promise<boolean>;
   principal: Principal;
   requestBalance(accountId?: number): Promise<bigint>;
-  requestTransfer(args: SendICPArgs): Promise<bigint>;
+  requestTransfer(args: SendICPTsArgs): Promise<bigint>;
   requestConnect(): Promise<any>;
 };
 
@@ -68,7 +69,7 @@ export default class Provider implements ProviderInterface {
     })
   }
 
-  public async requestTransfer(args: SendICPArgs): Promise<bigint> {
+  public async requestTransfer(args: SendICPTsArgs): Promise<bigint> {
     const metadata = getDomainMetadata();
 
     return await this.clientRPC.call('requestTransfer', [metadata, args], {
