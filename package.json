@@ -1,6 +1,6 @@
 {
-  "name": "@fleekhq/plug-inpage-provider",
-  "version": "1.0.1",
+  "name": "@psychedelic/plug-inpage-provider",
+  "version": "1.0.4",
   "main": "dist/index.js",
   "module": "dist/esm/index.js",
   "jsnext:main": "dist/esm/index.js",
@@ -15,11 +15,15 @@
     "clean": "rimraf ./dist",
     "lint": "eslint --ext .js,.ts ./src/**",
     "lint:fix": "npm run lint -- --fix",
-    "test": "jest"
+    "test": "jest",
+    "publish": "npm run build && npm publish"
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/FleekHQ/plug-inpage-provider.git"
+    "url": "git+https://github.com/psychedelic/plug-inpage-provider.git"
+  },
+  "publishConfig": {
+    "registry": "https://npm.pkg.github.com/@psychedelic"
   },
   "keywords": [
     "package",

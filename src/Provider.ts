@@ -1,35 +1,36 @@
 import BrowserRPC from '@fleekhq/browser-rpc/dist/BrowserRPC';
-import { Actor, Principal, Agent, HttpAgent, DerEncodedBlob } from '@dfinity/agent';
+import { Principal, Agent, HttpAgent, DerEncodedBlob } from '@dfinity/agent';
 import getDomainMetadata from './utils/domain-metadata';
 import { PlugIdentity } from './identity';
-
-export type ProxyDankCallback = <T extends Actor>(actor: T) => void;
-
-export type WithDankProxy = <T extends Actor>(
-  actor: T,
-  cb: (actor: T) => void,
-  cycles: number,
-) => void;
 
 export interface RequestConnectInput {
   canisters?: Principal[];
   timeout?: number;
-};
+}
 
-export interface RequestCycleWithdrawal {
-  canisterId: string;
-  methodName: string;
-  parameters: string;
-  cycles: number;
+export interface TimeStamp { 'timestamp_nanos': bigint }
+
+export interface SendOpts {
+  fee?: bigint;
+  memo?: bigint;
+  from_subaccount?: number;
+  created_at_time?: TimeStamp;
+}
+
+// The amount in e8s (ICPs)
+interface SendICPTsArgs {
+  to: string;
+  amount: bigint;
+  opts?: SendOpts;
 }
 
 export interface ProviderInterface {
   isConnected(): Promise<boolean>;
   principal: Principal;
+  requestBalance(accountId?: number): Promise<bigint>;
+  requestTransfer(args: SendICPTsArgs): Promise<bigint>;
+  requestConnect(): Promise<any>;
   agent: Agent;
-  withDankProxy: WithDankProxy;
-  requestConnect(): Promise<any>; // input: RequestConnectInput // should return Promise<Agent>
-  requestCycleWithdrawal(requests: RequestCycleWithdrawal[]): Promise<any>;
 };
 
 export default class Provider implements ProviderInterface {
@@ -56,6 +57,7 @@ export default class Provider implements ProviderInterface {
 
   public async isConnected(): Promise<boolean> {
     const metadata = getDomainMetadata();
+
     return await this.clientRPC.call('isConnected', [metadata.url], {
       timeout: 0,
       target: "",
@@ -73,14 +75,23 @@ export default class Provider implements ProviderInterface {
     });
   };
 
-  public async requestCycleWithdrawal(requests: RequestCycleWithdrawal[]): Promise<any> {
+  public async requestBalance(accountId = 0): Promise<bigint> {
     const metadata = getDomainMetadata();
 
-    return await this.clientRPC.call('requestCycleWithdrawal', [metadata, requests], {
+    return await this.clientRPC.call('requestBalance', [metadata, accountId], {
       timeout: 0,
       target: "",
-    });
-  };
+    })
+  }
+
+  public async requestTransfer(args: SendICPTsArgs): Promise<bigint> {
+    const metadata = getDomainMetadata();
+
+    return await this.clientRPC.call('requestTransfer', [metadata, args], {
+      timeout: 0,
+      target: "",
+    })
+  }
 
   public async sign(payload: ArrayBuffer): Promise<ArrayBuffer> {
     const metadata = getDomainMetadata();
@@ -89,14 +100,4 @@ export default class Provider implements ProviderInterface {
       target: "",
     });
   };
-
-  public withDankProxy<T extends Actor>(
-    actor: T,
-    cb: (actor: T) => void,
-    cycles: number,
-  ): void { }
-
-  public test(name: string): Promise<any> {
-    return this.clientRPC.call('test', [name]);
-  }
 };
