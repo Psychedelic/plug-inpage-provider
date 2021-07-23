@@ -9,8 +9,8 @@
   "sideEffects": false,
   "scripts": {
     "build": "npm run clean && npm-run-all --parallel build:** && node ./scripts/add-package.js",
-    "build:cjs": "tsc --module commonjs --target es2015 --outDir ./dist",
-    "build:esm": "tsc --module es2015 --target es5 --outDir ./dist/esm -d false",
+    "build:cjs": "tsc --module commonjs --target es6 --outDir ./dist",
+    "build:esm": "tsc --module es2015 --target es6 --outDir ./dist/esm -d false",
     "prepublishOnly": "npm run build",
     "clean": "rimraf ./dist",
     "lint": "eslint --ext .js,.ts ./src/**",
