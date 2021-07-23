@@ -1,5 +1,5 @@
 import BrowserRPC from '@fleekhq/browser-rpc/dist/BrowserRPC';
-import { Principal, Agent, HttpAgent, DerEncodedBlob } from '@dfinity/agent';
+import { Agent, DerEncodedBlob, HttpAgent, Principal } from '@dfinity/agent';
 import getDomainMetadata from './utils/domain-metadata';
 import { PlugIdentity } from './identity';
 
@@ -30,29 +30,35 @@ export interface ProviderInterface {
   requestBalance(accountId?: number): Promise<bigint>;
   requestTransfer(args: SendICPTsArgs): Promise<bigint>;
   requestConnect(): Promise<any>;
-  agent: Agent;
+  createAgent(): Promise<any>;
+  agent: Agent | null;
 };
 
 export default class Provider implements ProviderInterface {
-
-  // @ts-ignore
-  public agent: Agent;
-
+  public agent: Agent | null;
   // @ts-ignore
   public principal: Principal;
   private clientRPC: BrowserRPC;
-
+  private publicKey: DerEncodedBlob;
   constructor(clientRPC: BrowserRPC, publicKey: DerEncodedBlob) {
     this.clientRPC = clientRPC;
+    this.clientRPC.start();
+    this.publicKey = publicKey;
+    this.agent = null;
+  }
 
-    const identity = new PlugIdentity(publicKey, this.sign);
+  public async createAgent() {
+    const metadata = getDomainMetadata();
+    const identity = new PlugIdentity(this.publicKey, this.sign);
 
     this.agent = new HttpAgent({
       identity,
       host: "https://mainnet.dfinity.network",
     });
-
-    this.clientRPC.start();
+    return await this.clientRPC.call('createAgent', [metadata.url], {
+      timeout: 0,
+      target: "",
+    });
   }
 
   public async isConnected(): Promise<boolean> {

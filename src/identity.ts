@@ -1,4 +1,3 @@
-import { Buffer } from 'buffer/';
 import { SignIdentity, PublicKey, BinaryBlob, DerEncodedBlob } from '@dfinity/agent';
 
 type SignCb = (payload: ArrayBuffer) => Promise<ArrayBuffer>;
@@ -17,6 +16,6 @@ export class PlugIdentity extends SignIdentity {
   async sign(blob: BinaryBlob): Promise<BinaryBlob> {
     const ab = blob.buffer.slice(blob.byteOffset, blob.byteOffset + blob.byteLength);
     const res = await this.signCb(ab);
-    return Buffer.from(res) as BinaryBlob;
+    return res as BinaryBlob;
   }
 }
