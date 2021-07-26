@@ -1,5 +1,6 @@
 import BrowserRPC from '@fleekhq/browser-rpc/dist/BrowserRPC';
-import { Agent, HttpAgent, Principal } from '@dfinity/agent';
+import { Agent, HttpAgent } from '@dfinity/agent';
+import { Principal } from '@dfinity/principal';
 import getDomainMetadata from './utils/domain-metadata';
 import { PlugIdentity } from './identity';
 
@@ -51,12 +52,13 @@ export default class Provider implements ProviderInterface {
       timeout: 0,
       target: "",
     });
-    const identity = new PlugIdentity(publicKey, this.sign);
-
+    const identity = new PlugIdentity(publicKey, this.sign.bind(this));
+    console.log('created identity', identity);
     this.agent = new HttpAgent({
       identity,
       host: "https://mainnet.dfinity.network",
     });
+    console.log('created agent', this.agent);
     return;
   }
 
@@ -100,9 +102,12 @@ export default class Provider implements ProviderInterface {
 
   public async sign(payload: ArrayBuffer): Promise<ArrayBuffer> {
     const metadata = getDomainMetadata();
-    return await this.clientRPC.call('sign', [metadata.url, payload], {
+    console.log('calling sign on the inpage', payload);
+    const res = await this.clientRPC.call('sign', [metadata.url, payload], {
       timeout: 0,
       target: "",
     });
+    console.log('inpage res', res) 
+    return new Uint8Array(res);
   };
 };
