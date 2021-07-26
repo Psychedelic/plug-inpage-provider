@@ -66,7 +66,7 @@ function hashValue(value: any): BinaryBlob {
     // So we want to try all the high-assurance type guards before this 'probable' one.
     return hash(lebEncode(value) as BinaryBlob);
   }
-  throw Object.assign(new Error(`Attempt to hash a value of unsupported type: ${value}`), {
+  throw Object.assign(new Error(`Attempt to hash a value of unsupported type: ${value} of type ${typeof value}`), {
     // include so logs/callers can understand the confusing value.
     // (when stringified in error message, prototype info is lost)
     value,

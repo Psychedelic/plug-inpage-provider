@@ -53,12 +53,10 @@ export default class Provider implements ProviderInterface {
       target: "",
     });
     const identity = new PlugIdentity(publicKey, this.sign.bind(this), whitelist);
-    console.log('created identity', identity);
     this.agent = new HttpAgent({
       identity,
       host: "https://mainnet.dfinity.network",
     });
-    console.log('created agent', this.agent);
     return;
   }
 
@@ -102,12 +100,10 @@ export default class Provider implements ProviderInterface {
 
   public async sign(payload: ArrayBuffer): Promise<ArrayBuffer> {
     const metadata = getDomainMetadata();
-    console.log('calling sign on the inpage', payload);
-    const res = await this.clientRPC.call('sign', [metadata.url, payload], {
+    const res = await this.clientRPC.call('sign', [payload, metadata], {
       timeout: 0,
       target: "",
     });
-    console.log('inpage res', res) 
     return new Uint8Array(res);
   };
 };

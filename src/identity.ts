@@ -1,4 +1,4 @@
-import { SignIdentity, PublicKey, HttpAgentRequest, Cbor } from '@dfinity/agent';
+import { SignIdentity, PublicKey, HttpAgentRequest } from '@dfinity/agent';
 import { BinaryBlob, blobFromBuffer, DerEncodedBlob } from '@dfinity/candid';
 import { Principal } from '@dfinity/principal';
 import { Buffer } from 'buffer/';
@@ -22,7 +22,7 @@ export class PlugIdentity extends SignIdentity {
   private whitelist: string[];
   constructor(publicKey: SerializedPublicKey, private signCb: SignCb, whitelist: string[]) {
     super();
-    this.publicKey = { ...publicKey, toDer: () => publicKey.derKey.data };
+    this.publicKey = { ...publicKey, toDer: () => publicKey.derKey?.data ?? publicKey.derKey };
     this.signCb = signCb;
     this.whitelist = whitelist || [];
   }
@@ -32,14 +32,13 @@ export class PlugIdentity extends SignIdentity {
   }
 
   async sign(blob: BinaryBlob): Promise<BinaryBlob> {
-    const ab = blob.buffer.slice(blob.byteOffset, blob.byteOffset + blob.byteLength);
-    const res = await this.signCb(ab);
+    const res = await this.signCb(blob);
     return res as BinaryBlob;
   }
 
   getPrincipal(): Principal {
     if (!this._principal) {
-      this._principal = Principal.selfAuthenticating(this.getPublicKey().toDer());
+      this._principal = Principal.selfAuthenticating(this.publicKey.toDer());
     }
     return this._principal;
   }
@@ -51,28 +50,28 @@ export class PlugIdentity extends SignIdentity {
    */
    public async transformRequest(request: HttpAgentRequest): Promise<unknown> {
     const { body, ...fields } = request;
-    console.log('whitelist', this.whitelist);
-    console.log('canisterId', body);
-    const canisterId = body?.canister_id?.toString?.() || Principal.fromUint8Array(body?.canister_id?._arr).toString?.();
-    if (!this.whitelist.some(id => id === canisterId)){
+
+    const canister = body?.canister_id instanceof Principal ? body?.canister_id : Principal.fromUint8Array(body?.canister_id?._arr);
+    if (!this.whitelist.some(id => id === canister.toString())){
       throw new Error(`Request failed:\n` +
                 `  Code: 401\n` +
-                `  Body: Plug Identity is not allowed to make requests to canister Id ${canisterId}`);
+                `  Body: Plug Identity is not allowed to make requests to canister Id ${canister.toString()}`);
     }
+  
     const requestId = await requestIdOf(body);
-    console.log('requestId', requestId.toString('hex'));
     const sender_sig = await this.sign(blobFromBuffer(Buffer.concat([domainSeparator, requestId])))
-    console.log('sender_sig', sender_sig.toString('hex'));
+
     const transformedResponse = {
       ...fields,
       body: {
-        content: body,
+        content: {
+          ...body,
+          canister_id: canister
+        },
         sender_pubkey: this.getPublicKey().toDer(),
         sender_sig
       },
     };
-    console.log('transformed response', transformedResponse);
-    console.log('encoded response', Cbor.encode(transformedResponse.body));
     return transformedResponse;
   }
 }
