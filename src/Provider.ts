@@ -31,7 +31,7 @@ export interface ProviderInterface {
   requestBalance(accountId?: number): Promise<bigint>;
   requestTransfer(args: SendICPTsArgs): Promise<bigint>;
   requestConnect(): Promise<any>;
-  createAgent(): Promise<any>;
+  createAgent(whitelist: string[]): Promise<any>;
   agent: Agent | null;
 };
 
@@ -46,13 +46,13 @@ export default class Provider implements ProviderInterface {
     this.agent = null;
   }
 
-  public async createAgent() {
+  public async createAgent(whitelist: string[]) {
     const metadata = getDomainMetadata();
-    const publicKey = await this.clientRPC.call('getPublicKey', [metadata.url], {
+    const publicKey = await this.clientRPC.call('getPublicKey', [metadata], {
       timeout: 0,
       target: "",
     });
-    const identity = new PlugIdentity(publicKey, this.sign.bind(this));
+    const identity = new PlugIdentity(publicKey, this.sign.bind(this), whitelist);
     console.log('created identity', identity);
     this.agent = new HttpAgent({
       identity,

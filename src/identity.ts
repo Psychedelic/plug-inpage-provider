@@ -19,10 +19,12 @@ interface SerializedPublicKey {
 }
 export class PlugIdentity extends SignIdentity {
   private publicKey: PublicKey;
-  constructor(publicKey: SerializedPublicKey, private signCb: SignCb) {
+  private whitelist: string[];
+  constructor(publicKey: SerializedPublicKey, private signCb: SignCb, whitelist: string[]) {
     super();
     this.publicKey = { ...publicKey, toDer: () => publicKey.derKey.data };
     this.signCb = signCb;
+    this.whitelist = whitelist || [];
   }
   
   getPublicKey(): PublicKey {
@@ -49,9 +51,17 @@ export class PlugIdentity extends SignIdentity {
    */
    public async transformRequest(request: HttpAgentRequest): Promise<unknown> {
     const { body, ...fields } = request;
+    console.log('whitelist', this.whitelist);
+    console.log('canisterId', body);
+    const canisterId = body?.canister_id?.toString?.() || Principal.fromUint8Array(body?.canister_id?._arr).toString?.();
+    if (!this.whitelist.some(id => id === canisterId)){
+      throw new Error(`Request failed:\n` +
+                `  Code: 401\n` +
+                `  Body: Plug Identity is not allowed to make requests to canister Id ${canisterId}`);
+    }
     const requestId = await requestIdOf(body);
     console.log('requestId', requestId.toString('hex'));
-    const sender_sig = await this.sign(blobFromBuffer((Buffer as any).concat([domainSeparator, requestId]))) // ts-disable-line
+    const sender_sig = await this.sign(blobFromBuffer(Buffer.concat([domainSeparator, requestId])))
     console.log('sender_sig', sender_sig.toString('hex'));
     const transformedResponse = {
       ...fields,
