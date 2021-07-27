@@ -48,7 +48,7 @@ export default class Provider implements ProviderInterface {
 
   public async createAgent(whitelist: string[]) {
     const metadata = getDomainMetadata();
-    const publicKey = await this.clientRPC.call('getPublicKey', [metadata], {
+    const publicKey = await this.clientRPC.call('allowAgent', [metadata, whitelist], {
       timeout: 0,
       target: "",
     });
