@@ -74,12 +74,13 @@ export default class Provider implements ProviderInterface {
   }
 
   public async createActor<T>({
-    agent,
     canisterId,
     interfaceFactory,
   }: CreateActor<T>): Promise<ActorSubclass<T>> {
+    if (!this.agent) throw Error('Oops! Agent initialisation required.');
+
     return Actor.createActor(interfaceFactory, {
-      agent,
+      agent: this.agent,
       canisterId,
     })
   }
