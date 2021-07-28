@@ -38,7 +38,7 @@ export interface ProviderInterface {
   principal: Principal;
   requestBalance(accountId?: number): Promise<bigint>;
   requestTransfer(args: SendICPTsArgs): Promise<bigint>;
-  requestConnect(): Promise<any>;
+  requestConnect(whitelist?: string[]): Promise<any>;
   createAgent(whitelist: string[]): Promise<any>;
   createActor<T>({
     canisterId,
@@ -72,11 +72,16 @@ export default class Provider implements ProviderInterface {
     return;
   }
 
+  public deleteAgent() {
+    this.agent = null;
+    return;
+  }
+
   public async createActor<T>({
     canisterId,
     interfaceFactory,
   }: CreateActor<T>): Promise<ActorSubclass<T>> {
-    if (!this.agent) throw Error('Oops! Agent initialisation required.');
+    if (!this.agent) throw Error('Oops! Agent initialization required.');
 
     return Actor.createActor(interfaceFactory, {
       agent: this.agent,
@@ -94,11 +99,10 @@ export default class Provider implements ProviderInterface {
   };
 
   // @ts-ignore
-  public async requestConnect(): Promise<any> {
+  public async requestConnect(whitelist?: string[]): Promise<any> {
     const metadata = getDomainMetadata();
-    const icon = metadata.icons[0] || null;
 
-    return await this.clientRPC.call('requestConnect', [metadata.url, metadata.name, icon], {
+    return await this.clientRPC.call('requestConnect', [metadata, whitelist || []], {
       timeout: 0,
       target: "",
     });
