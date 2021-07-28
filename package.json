@@ -15,8 +15,7 @@
     "clean": "rimraf ./dist",
     "lint": "eslint --ext .js,.ts ./src/**",
     "lint:fix": "npm run lint -- --fix",
-    "test": "jest",
-    "publish": "npm run build && npm publish"
+    "test": "jest"
   },
   "repository": {
     "type": "git",
