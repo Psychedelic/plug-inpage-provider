@@ -1,12 +1,12 @@
 {
   "name": "@psychedelic/plug-inpage-provider",
-  "version": "1.0.4",
+  "version": "1.0.5",
   "main": "dist/index.js",
   "module": "dist/esm/index.js",
   "jsnext:main": "dist/esm/index.js",
   "types": "dist/index.d.ts",
   "license": "MIT",
-  "sideEffects": false,  
+  "sideEffects": false,
   "scripts": {
     "build": "npm run clean && npm-run-all --parallel build:** && node ./scripts/add-package.js",
     "build:cjs": "tsc --module commonjs --target es6 --outDir ./dist",

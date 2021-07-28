@@ -1,5 +1,6 @@
 import BrowserRPC from '@fleekhq/browser-rpc/dist/BrowserRPC';
-import { Agent, HttpAgent } from '@dfinity/agent';
+import { Agent, HttpAgent, Actor, ActorSubclass } from '@dfinity/agent';
+import { IDL } from '@dfinity/candid';
 import { Principal } from '@dfinity/principal';
 import getDomainMetadata from './utils/domain-metadata';
 import { PlugIdentity } from './identity';
@@ -25,6 +26,13 @@ interface SendICPTsArgs {
   opts?: SendOpts;
 }
 
+interface CreateActor<T> {
+  agent: HttpAgent;
+  actor: ActorSubclass<ActorSubclass<T>>;
+  canisterId: string;
+  interfaceFactory: IDL.InterfaceFactory;
+}
+
 export interface ProviderInterface {
   isConnected(): Promise<boolean>;
   principal: Principal;
@@ -32,6 +40,10 @@ export interface ProviderInterface {
   requestTransfer(args: SendICPTsArgs): Promise<bigint>;
   requestConnect(): Promise<any>;
   createAgent(whitelist: string[]): Promise<any>;
+  createActor<T>({
+    canisterId,
+    interfaceFactory,
+  }: CreateActor<T>): Promise<ActorSubclass<T>>;
   agent: Agent | null;
 };
 
@@ -58,6 +70,18 @@ export default class Provider implements ProviderInterface {
       host: "https://mainnet.dfinity.network",
     });
     return;
+  }
+
+  public async createActor<T>({
+    canisterId,
+    interfaceFactory,
+  }: CreateActor<T>): Promise<ActorSubclass<T>> {
+    if (!this.agent) throw Error('Oops! Agent initialisation required.');
+
+    return Actor.createActor(interfaceFactory, {
+      agent: this.agent,
+      canisterId,
+    })
   }
 
   public async isConnected(): Promise<boolean> {
