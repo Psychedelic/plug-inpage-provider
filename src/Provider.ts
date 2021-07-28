@@ -57,20 +57,6 @@ export default class Provider implements ProviderInterface {
     this.agent = null;
   }
 
-  public async createAgent(whitelist: string[]) {
-    const metadata = getDomainMetadata();
-    const publicKey = await this.clientRPC.call('allowAgent', [metadata, whitelist], {
-      timeout: 0,
-      target: "",
-    });
-    const identity = new PlugIdentity(publicKey, this.sign.bind(this), whitelist);
-    this.agent = new HttpAgent({
-      identity,
-      host: "https://mainnet.dfinity.network",
-    });
-    return;
-  }
-
   public deleteAgent() {
     this.agent = null;
     return;
