@@ -1,6 +1,6 @@
 {
   "name": "@psychedelic/plug-inpage-provider",
-  "version": "1.0.4",
+  "version": "1.0.5",
   "main": "dist/index.js",
   "module": "dist/esm/index.js",
   "jsnext:main": "dist/esm/index.js",
@@ -9,8 +9,8 @@
   "sideEffects": false,
   "scripts": {
     "build": "npm run clean && npm-run-all --parallel build:** && node ./scripts/add-package.js",
-    "build:cjs": "tsc --module commonjs --target es2015 --outDir ./dist",
-    "build:esm": "tsc --module es2015 --target es5 --outDir ./dist/esm -d false",
+    "build:cjs": "tsc --module commonjs --target es6 --outDir ./dist",
+    "build:esm": "tsc --module es2015 --target es6 --outDir ./dist/esm -d false",
     "prepublishOnly": "npm run build",
     "clean": "rimraf ./dist",
     "lint": "eslint --ext .js,.ts ./src/**",
@@ -56,7 +56,9 @@
   },
   "peerDependencies": {},
   "dependencies": {
-    "@dfinity/agent": "^0.7.1",
+    "@dfinity/agent": "^0.9.2",
+    "@dfinity/candid": "^0.9.2",
+    "@dfinity/principal": "^0.9.2",
     "@fleekhq/browser-rpc": "^2.0.2"
   }
 }
