@@ -41,7 +41,6 @@ export interface ProviderInterface {
   requestConnect(): Promise<any>;
   createAgent(whitelist: string[]): Promise<any>;
   createActor<T>({
-    agent,
     canisterId,
     interfaceFactory,
   }: CreateActor<T>): Promise<ActorSubclass<T>>;
