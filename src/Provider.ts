@@ -35,7 +35,6 @@ interface CreateActor<T> {
 
 export interface ProviderInterface {
   isConnected(): Promise<boolean>;
-  principal: Principal;
   requestBalance(accountId?: number): Promise<bigint>;
   requestTransfer(args: SendICPTsArgs): Promise<bigint>;
   requestConnect(whitelist?: string[]): Promise<any>;
