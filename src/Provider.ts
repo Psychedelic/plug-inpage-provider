@@ -102,10 +102,20 @@ export default class Provider implements ProviderInterface {
   public async requestConnect(whitelist?: string[]): Promise<any> {
     const metadata = getDomainMetadata();
 
-    return await this.clientRPC.call('requestConnect', [metadata, whitelist || []], {
+    const response = await this.clientRPC.call('requestConnect', [metadata, whitelist], {
       timeout: 0,
       target: "",
     });
+
+    if (!whitelist) return response;
+
+    const identity = new PlugIdentity(response, this.sign.bind(this), whitelist);
+    this.agent = new HttpAgent({
+      identity,
+      host: "https://mainnet.dfinity.network",
+    });
+
+    return;
   };
 
   public async requestBalance(accountId = 0): Promise<bigint> {
