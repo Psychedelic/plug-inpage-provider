@@ -37,8 +37,8 @@ export interface ProviderInterface {
   isConnected(): Promise<boolean>;
   requestBalance(accountId?: number): Promise<bigint>;
   requestTransfer(args: SendICPTsArgs): Promise<bigint>;
-  requestConnect(whitelist?: string[]): Promise<any>;
-  createAgent(whitelist: string[]): Promise<any>;
+  requestConnect(whitelist?: string[], host?: string): Promise<any>;
+  createAgent(whitelist: string[], host?: string): Promise<any>;
   createActor<T>({
     canisterId,
     interfaceFactory,
