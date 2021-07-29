@@ -84,7 +84,7 @@ export default class Provider implements ProviderInterface {
   };
 
   // @ts-ignore
-  public async requestConnect(whitelist?: string[]): Promise<any> {
+  public async requestConnect(whitelist?: string[] = [], host = "https://mainnet.dfinity.network"): Promise<any> {
     const metadata = getDomainMetadata();
 
     const response = await this.clientRPC.call('requestConnect', [metadata, whitelist], {
@@ -97,11 +97,26 @@ export default class Provider implements ProviderInterface {
     const identity = new PlugIdentity(response, this.sign.bind(this), whitelist);
     this.agent = new HttpAgent({
       identity,
-      host: "https://mainnet.dfinity.network",
+      host,
     });
 
     return;
   };
+
+  // Note: this will overwrite the current agent
+  public async createAgent(whitelist: string[] = [], host = "https://mainnet.dfinity.network") {
+    const metadata = getDomainMetadata();
+    const publicKey = await this.clientRPC.call('allowAgent', [metadata, whitelist], {
+      timeout: 0,
+      target: "",
+    });
+    const identity = new PlugIdentity(publicKey, this.sign.bind(this), whitelist);
+    this.agent = new HttpAgent({
+      identity,
+      host,
+    });
+    return;
+  }
 
   public async requestBalance(accountId = 0): Promise<bigint> {
     const metadata = getDomainMetadata();
