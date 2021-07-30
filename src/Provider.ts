@@ -97,8 +97,7 @@ export default class Provider implements ProviderInterface {
     });
   };
 
-  // @ts-ignore
-  public async requestConnect(whitelist?: string[] = [], host = "https://mainnet.dfinity.network"): Promise<any> {
+  public async requestConnect({ whitelist, host }: RequestConnectParams = DEFAULT_REQUEST_CONNECT_ARGS): Promise<any> {
     const metadata = getDomainMetadata();
 
     const response = await this.clientRPC.call('requestConnect', [metadata, whitelist], {
@@ -106,19 +105,24 @@ export default class Provider implements ProviderInterface {
       target: "",
     });
 
-    if (!whitelist) return response;
+    if (
+      !whitelist
+      || !Array.isArray(whitelist)
+      || !whitelist.length
+    ) return response;
 
     const identity = new PlugIdentity(response, this.sign.bind(this), whitelist);
+
     this.agent = new HttpAgent({
       identity,
       host,
     });
 
-    return;
+    return !!this.agent;
   };
 
   // Note: this will overwrite the current agent
-  public async createAgent(whitelist: string[] = [], host = "https://mainnet.dfinity.network") {
+  public async createAgent({ whitelist, host }: CreateAgentParams = DEFAULT_REQUEST_CONNECT_ARGS) {
     const metadata = getDomainMetadata();
     const publicKey = await this.clientRPC.call('getPublicKey', [metadata, whitelist], {
       timeout: 0,
@@ -141,10 +145,10 @@ export default class Provider implements ProviderInterface {
     })
   }
 
-  public async requestTransfer(args: SendICPTsArgs): Promise<bigint> {
+  public async requestTransfer(params: RequestTransferParams): Promise<bigint> {
     const metadata = getDomainMetadata();
 
-    return await this.clientRPC.call('requestTransfer', [metadata, args], {
+    return await this.clientRPC.call('requestTransfer', [metadata, params], {
       timeout: 0,
       target: "",
     })
