@@ -100,7 +100,7 @@ export default class Provider implements ProviderInterface {
   public async requestConnect({
     whitelist = DEFAULT_REQUEST_CONNECT_ARGS.whitelist,
     host = DEFAULT_REQUEST_CONNECT_ARGS.host,
-  }: RequestConnectParams): Promise<any> {
+  }: RequestConnectParams = DEFAULT_REQUEST_CONNECT_ARGS): Promise<any> {
     const metadata = getDomainMetadata();
 
     const response = await this.clientRPC.call('requestConnect', [metadata, whitelist], {
@@ -128,7 +128,7 @@ export default class Provider implements ProviderInterface {
   public async createAgent({
     whitelist = DEFAULT_REQUEST_CONNECT_ARGS.whitelist,
     host = DEFAULT_REQUEST_CONNECT_ARGS.host,
-  }: CreateAgentParams) {
+  }: CreateAgentParams = DEFAULT_REQUEST_CONNECT_ARGS) {
     const metadata = getDomainMetadata();
     const publicKey = await this.clientRPC.call('getPublicKey', [metadata, whitelist], {
       timeout: 0,
