@@ -20,7 +20,7 @@ export interface SendOpts {
 }
 
 // The amount in e8s (ICPs)
-interface SendICPTsArgs {
+interface RequestTransferParams {
   to: string;
   amount: bigint;
   opts?: SendOpts;
@@ -33,12 +33,26 @@ interface CreateActor<T> {
   interfaceFactory: IDL.InterfaceFactory;
 }
 
+interface RequestConnectParams {
+  whitelist: string[];
+  host: string;
+}
+
+interface CreateAgentParams extends RequestConnectParams {};
+
+const DEFAULT_HOST = "https://mainnet.dfinity.network";
+/* eslint-disable @typescript-eslint/no-unused-vars */
+const DEFAULT_REQUEST_CONNECT_ARGS: RequestConnectParams = {
+  whitelist: [],
+  host: DEFAULT_HOST,
+};
+
 export interface ProviderInterface {
   isConnected(): Promise<boolean>;
   requestBalance(accountId?: number): Promise<bigint>;
-  requestTransfer(args: SendICPTsArgs): Promise<bigint>;
-  requestConnect(whitelist?: string[], host?: string): Promise<any>;
-  createAgent(whitelist: string[], host?: string): Promise<any>;
+  requestTransfer(params: RequestTransferParams): Promise<bigint>;
+  requestConnect(params: RequestConnectParams): Promise<any>;
+  createAgent(params: CreateAgentParams): Promise<any>;
   createActor<T>({
     canisterId,
     interfaceFactory,
