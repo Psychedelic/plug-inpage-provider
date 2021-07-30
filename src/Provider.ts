@@ -38,8 +38,6 @@ interface RequestConnectParams {
   host: string;
 }
 
-interface CreateAgentParams extends RequestConnectParams {};
-
 const DEFAULT_HOST = "https://mainnet.dfinity.network";
 /* eslint-disable @typescript-eslint/no-unused-vars */
 const DEFAULT_REQUEST_CONNECT_ARGS: RequestConnectParams = {
@@ -52,7 +50,6 @@ export interface ProviderInterface {
   requestBalance(accountId?: number): Promise<bigint>;
   requestTransfer(params: RequestTransferParams): Promise<bigint>;
   requestConnect(params: RequestConnectParams): Promise<any>;
-  createAgent(params: CreateAgentParams): Promise<any>;
   createActor<T>({
     canisterId,
     interfaceFactory,
@@ -123,24 +120,6 @@ export default class Provider implements ProviderInterface {
 
     return !!this.agent;
   };
-
-  // Note: this will overwrite the current agent
-  public async createAgent({
-    whitelist = DEFAULT_REQUEST_CONNECT_ARGS.whitelist,
-    host = DEFAULT_REQUEST_CONNECT_ARGS.host,
-  }: CreateAgentParams = DEFAULT_REQUEST_CONNECT_ARGS) {
-    const metadata = getDomainMetadata();
-    const publicKey = await this.clientRPC.call('getPublicKey', [metadata, whitelist], {
-      timeout: 0,
-      target: "",
-    });
-    const identity = new PlugIdentity(publicKey, this.sign.bind(this), whitelist);
-    this.agent = new HttpAgent({
-      identity,
-      host,
-    });
-    return;
-  }
 
   public async requestBalance(accountId = 0): Promise<bigint> {
     const metadata = getDomainMetadata();
