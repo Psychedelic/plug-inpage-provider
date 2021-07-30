@@ -106,7 +106,7 @@ export default class Provider implements ProviderInterface {
   // Note: this will overwrite the current agent
   public async createAgent(whitelist: string[] = [], host = "https://mainnet.dfinity.network") {
     const metadata = getDomainMetadata();
-    const publicKey = await this.clientRPC.call('allowAgent', [metadata, whitelist], {
+    const publicKey = await this.clientRPC.call('getPublicKey', [metadata, whitelist], {
       timeout: 0,
       target: "",
     });
