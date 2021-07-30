@@ -38,7 +38,6 @@ export interface ProviderInterface {
   requestBalance(accountId?: number): Promise<bigint>;
   requestTransfer(args: SendICPTsArgs): Promise<bigint>;
   requestConnect(whitelist?: string[], host?: string): Promise<any>;
-  createAgent(whitelist: string[], host?: string): Promise<any>;
   createActor<T>({
     canisterId,
     interfaceFactory,
@@ -102,21 +101,6 @@ export default class Provider implements ProviderInterface {
 
     return;
   };
-
-  // Note: this will overwrite the current agent
-  public async createAgent(whitelist: string[] = [], host = "https://mainnet.dfinity.network") {
-    const metadata = getDomainMetadata();
-    const publicKey = await this.clientRPC.call('getPublicKey', [metadata, whitelist], {
-      timeout: 0,
-      target: "",
-    });
-    const identity = new PlugIdentity(publicKey, this.sign.bind(this), whitelist);
-    this.agent = new HttpAgent({
-      identity,
-      host,
-    });
-    return;
-  }
 
   public async requestBalance(accountId = 0): Promise<bigint> {
     const metadata = getDomainMetadata();
