@@ -50,12 +50,13 @@ export class PlugIdentity extends SignIdentity {
    */
    public async transformRequest(request: HttpAgentRequest): Promise<unknown> {
     const { body, ...fields } = request;
-
-    const canister = body?.canister_id instanceof Principal ? body?.canister_id : Principal.fromUint8Array(body?.canister_id?._arr);
-    if (!this.whitelist.some(id => id === canister.toString())){
-      throw new Error(`Request failed:\n` +
-                `  Code: 401\n` +
-                `  Body: Plug Identity is not allowed to make requests to canister Id ${canister.toString()}`);
+    if (body?.canister_id) {
+      const canister = body?.canister_id instanceof Principal ? body?.canister_id : Principal.fromUint8Array(body?.canister_id?._arr);
+      if (!this.whitelist.some(id => id === canister.toString())){
+        throw new Error(`Request failed:\n` +
+                  `  Code: 401\n` +
+                  `  Body: Plug Identity is not allowed to make requests to canister Id ${canister.toString()}`);
+      }
     }
   
     const requestId = await requestIdOf(body);
@@ -64,10 +65,7 @@ export class PlugIdentity extends SignIdentity {
     const transformedResponse = {
       ...fields,
       body: {
-        content: {
-          ...body,
-          canister_id: canister
-        },
+        content: body,
         sender_pubkey: this.getPublicKey().toDer(),
         sender_sig
       },
