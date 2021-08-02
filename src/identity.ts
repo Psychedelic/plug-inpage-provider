@@ -87,10 +87,7 @@ export class PlugIdentity extends SignIdentity {
     const transformedResponse = {
       ...fields,
       body: {
-        content: {
-          ...body,
-          canister_id: canister,
-        },
+        content: body,
         sender_pubkey: this.getPublicKey().toDer(),
         sender_sig,
       },
