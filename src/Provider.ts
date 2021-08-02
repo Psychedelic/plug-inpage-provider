@@ -10,6 +10,8 @@ export interface RequestConnectInput {
   timeout?: number;
 }
 
+export interface CreateAgentParams extends RequestConnectParams {};
+
 export interface TimeStamp { 'timestamp_nanos': bigint }
 
 export interface SendOpts {
@@ -55,6 +57,7 @@ export interface ProviderInterface {
     interfaceFactory,
   }: CreateActor<T>): Promise<ActorSubclass<T>>;
   agent: Agent | null;
+  createAgent(params: CreateAgentParams): Promise<boolean>;
 };
 
 export default class Provider implements ProviderInterface {
@@ -112,6 +115,27 @@ export default class Provider implements ProviderInterface {
     ) return response;
 
     const identity = new PlugIdentity(response, this.sign.bind(this), whitelist);
+
+    this.agent = new HttpAgent({
+      identity,
+      host,
+    });
+
+    return !!this.agent;
+  };
+
+  public async createAgent({
+    whitelist = DEFAULT_REQUEST_CONNECT_ARGS.whitelist,
+    host = DEFAULT_REQUEST_CONNECT_ARGS.host,
+  }: CreateAgentParams = DEFAULT_REQUEST_CONNECT_ARGS): Promise<any> {
+    const metadata = getDomainMetadata();
+
+    const publicKey = await this.clientRPC.call('verifyWhitelist', [metadata, whitelist], {
+      timeout: 0,
+      target: "",
+    });
+
+    const identity = new PlugIdentity(publicKey, this.sign.bind(this), whitelist);
 
     this.agent = new HttpAgent({
       identity,
