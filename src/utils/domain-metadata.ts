@@ -1,5 +1,5 @@
 const getDomainMetadata = () => {
-  const url = window.location.origin;
+  const url = beautifyUrl(window.location.origin);
   const name = getName();
   const icons = getIcons();
   const pageWidth = getPageWidth();
@@ -13,6 +13,10 @@ const getDomainMetadata = () => {
 };
 
 export default getDomainMetadata;
+
+const beautifyUrl = (url: string) => (
+  url.replace(/^(?:https?:\/\/)?(?:www\.)?/i, '').split('/')[0]
+);
 
 const getPageWidth = () => {
   const win = window,
@@ -28,7 +32,7 @@ const getName = () => {
 
   const metaTags = document.getElementsByTagName('meta');
 
-  if (!metaTags) return window.location.origin
+  if (!metaTags) return beautifyUrl(window.location.origin);
 
   for (let i = 0; i < metaTags.length; i += 1) {
 
@@ -42,7 +46,7 @@ const getName = () => {
     }
   }
 
-  return name ?? window.location.origin;
+  return name ?? beautifyUrl(window.location.origin);
 };
 
 const getIcons = () => {
