@@ -40,6 +40,11 @@ interface RequestConnectParams {
   host: string;
 }
 
+interface RequestBurnXTCParams {
+  to: string;
+  amount: bigint;
+}
+
 const DEFAULT_HOST = "https://mainnet.dfinity.network";
 /* eslint-disable @typescript-eslint/no-unused-vars */
 const DEFAULT_REQUEST_CONNECT_ARGS: RequestConnectParams = {
@@ -58,6 +63,7 @@ export interface ProviderInterface {
   }: CreateActor<T>): Promise<ActorSubclass<T>>;
   agent: Agent | null;
   createAgent(params: CreateAgentParams): Promise<boolean>;
+  requestBurnXTC(params: RequestBurnXTCParams): Promise<any>;
 };
 
 export default class Provider implements ProviderInterface {
@@ -171,4 +177,13 @@ export default class Provider implements ProviderInterface {
     });
     return new Uint8Array(res);
   };
+
+  public async requestBurnXTC(params: RequestBurnXTCParams): Promise<any> {
+    const metadata = getDomainMetadata();
+
+    return await this.clientRPC.call('requestBurnXTC', [metadata, params], {
+      timeout: 0,
+      target: "",
+    })
+  }
 };
