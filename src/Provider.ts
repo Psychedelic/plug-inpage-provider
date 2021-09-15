@@ -201,12 +201,10 @@ export default class Provider implements ProviderInterface {
   }
 
   public async getManagementCanister() {
-    if (!this.agent || !this.identity || !this.requestedHost) return;
-
-    const agent = this.agent;
+    if (!this.agent || !this.identity) return;
 
     return Actor.createActor(managementCanisterIdlFactory, {
-      agent,
+      agent: this.agent,
       canisterId: managementCanisterPrincipal,
       ...{
         callTransform: transformOverrideHandler,
