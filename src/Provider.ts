@@ -201,7 +201,9 @@ export default class Provider implements ProviderInterface {
   }
 
   public async getManagementCanister() {
-    if (!this.agent || !this.identity) return;
+    if (!this.agent || !this.identity) {
+      throw Error('Oops! Agent initialization or identity required.')
+    };
 
     return Actor.createActor(managementCanisterIdlFactory, {
       agent: this.agent,
