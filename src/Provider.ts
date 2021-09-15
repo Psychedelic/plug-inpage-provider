@@ -1,5 +1,5 @@
 import BrowserRPC from '@fleekhq/browser-rpc/dist/BrowserRPC';
-import { Agent, HttpAgent, Actor, ActorSubclass } from '@dfinity/agent';
+import { Agent, HttpAgent, Actor, ActorSubclass, HttpAgentOptions } from '@dfinity/agent';
 import { IDL } from '@dfinity/candid';
 import { Principal } from '@dfinity/principal';
 import getDomainMetadata from './utils/domain-metadata';
@@ -74,11 +74,15 @@ export default class Provider implements ProviderInterface {
   // @ts-ignore
   public principal: Principal;
   private clientRPC: BrowserRPC;
+  private identity: PlugIdentity | null;
+  private requestedHost: string | null;
 
   constructor(clientRPC: BrowserRPC) {
     this.clientRPC = clientRPC;
     this.clientRPC.start();
     this.agent = null;
+    this.identity = null;
+    this.requestedHost = null;
   }
 
   public deleteAgent() {
@@ -132,6 +136,9 @@ export default class Provider implements ProviderInterface {
       identity,
       host,
     });
+
+    this.identity = identity;
+    this.requestedHost = host;
 
     return !!this.agent;
   };
@@ -194,11 +201,29 @@ export default class Provider implements ProviderInterface {
   }
 
   public async getManagementCanister() {
-    if (!this.agent) return;
+    if (!this.identity || !this.requestedHost) return;
+
+    function transform(methodName, args, callConfig) {
+      const first = args[0] as any;
+      let effectiveCanisterId = Principal.fromHex('');
+      if (first && typeof first === 'object' && first.canister_id) {
+        effectiveCanisterId = Principal.from(first.canister_id as unknown);
+      }
+      return { effectiveCanisterId };
+    }
+
+    const agent = new HttpAgent({
+      host: this.requestedHost,
+      identity: this.identity,
+    });
 
     return Actor.createActor(managementCanisterIdlFactory, {
-      agent: this.agent,
+      agent,
       canisterId: Principal.fromHex(''),
+      ...{
+        callTransform: transform,
+        queryTransform: transform,
+      },
     });
   }
 };
