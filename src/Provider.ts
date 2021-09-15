@@ -3,6 +3,7 @@ import { Agent, HttpAgent, Actor, ActorSubclass } from '@dfinity/agent';
 import { IDL } from '@dfinity/candid';
 import { Principal } from '@dfinity/principal';
 import getDomainMetadata from './utils/domain-metadata';
+import { managementCanisterIdlFactory } from './utils/ic-management-api';
 import { PlugIdentity } from './identity';
 
 export interface RequestConnectInput {
@@ -73,6 +74,7 @@ export default class Provider implements ProviderInterface {
   // @ts-ignore
   public principal: Principal;
   private clientRPC: BrowserRPC;
+
   constructor(clientRPC: BrowserRPC) {
     this.clientRPC = clientRPC;
     this.clientRPC.start();
@@ -189,5 +191,14 @@ export default class Provider implements ProviderInterface {
       timeout: 0,
       target: "",
     })
+  }
+
+  public async getManagementCanister() {
+    if (!this.agent) return;
+
+    return Actor.createActor(managementCanisterIdlFactory, {
+      agent: this.agent,
+      canisterId: Principal.fromHex(''),
+    });
   }
 };
