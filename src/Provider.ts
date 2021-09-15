@@ -80,6 +80,17 @@ export interface ProviderInterface {
   versions: ProviderInterfaceVersions;
 }
 
+type CallConfigObject = {
+  timeout?: number;
+  target?: string;
+};
+
+type clientRPCCall = {
+  handler: string;
+  args?: any[] | null;
+  config?: CallConfigObject;
+};
+
 export default class Provider implements ProviderInterface {
   public agent: Agent | null;
   public versions: ProviderInterfaceVersions;
@@ -92,6 +103,29 @@ export default class Provider implements ProviderInterface {
     this.clientRPC.start();
     this.agent = null;
     this.versions = versions;
+  }
+
+  private async callClientRPC({
+    handler,
+    args,
+    config,
+  }): Promise<any> {
+    const metadata = getDomainMetadata();
+
+    return this.clientRPC.call(
+      handler,
+      args,
+      config,
+    )
+    .then((callResult) => {
+      return callResult;
+    })
+    .catch(async () => {
+      return await this.clientRPC.call('handleTimeout', [metadata], {
+        timeout: 0,
+        target: "",
+      });
+    });
   }
 
   public deleteAgent() {
@@ -184,9 +218,13 @@ export default class Provider implements ProviderInterface {
   public async requestBalance(accountId = 0): Promise<bigint> {
     const metadata = getDomainMetadata();
 
-    return await this.clientRPC.call("requestBalance", [metadata, accountId], {
-      timeout: 0,
-      target: "",
+    return await this.callClientRPC({
+      handler: 'requestBalance',
+      args: [metadata, accountId],
+      config: {
+        timeout: 0,
+        target: "",
+      },
     });
   }
 
