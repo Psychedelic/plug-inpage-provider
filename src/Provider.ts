@@ -76,15 +76,11 @@ export default class Provider implements ProviderInterface {
   // @ts-ignore
   public principal: Principal;
   private clientRPC: BrowserRPC;
-  private identity: PlugIdentity | null;
-  private requestedHost: string | null;
 
   constructor(clientRPC: BrowserRPC) {
     this.clientRPC = clientRPC;
     this.clientRPC.start();
     this.agent = null;
-    this.identity = null;
-    this.requestedHost = null;
   }
 
   public deleteAgent() {
@@ -136,9 +132,6 @@ export default class Provider implements ProviderInterface {
       identity,
       host,
     });
-
-    this.identity = identity;
-    this.requestedHost = host;
 
     return !!this.agent;
   };
@@ -201,8 +194,8 @@ export default class Provider implements ProviderInterface {
   }
 
   public async getManagementCanister() {
-    if (!this.agent || !this.identity) {
-      throw Error('Oops! Agent initialization or identity required.')
+    if (!this.agent) {
+      throw Error('Oops! Agent initialization required.')
     };
 
     return Actor.createActor(managementCanisterIdlFactory, {
