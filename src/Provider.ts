@@ -1,9 +1,13 @@
 import BrowserRPC from '@fleekhq/browser-rpc/dist/BrowserRPC';
-import { Agent, HttpAgent, Actor, ActorSubclass, HttpAgentOptions } from '@dfinity/agent';
+import { Agent, HttpAgent, Actor, ActorSubclass } from '@dfinity/agent';
 import { IDL } from '@dfinity/candid';
 import { Principal } from '@dfinity/principal';
 import getDomainMetadata from './utils/domain-metadata';
-import { managementCanisterIdlFactory } from './utils/ic-management-api';
+import {
+  managementCanisterIdlFactory,
+  managementCanisterPrincipal,
+  transformOverrideHandler,
+} from './utils/ic-management-api';
 import { PlugIdentity } from './identity';
 
 export interface RequestConnectInput {
@@ -201,28 +205,16 @@ export default class Provider implements ProviderInterface {
   }
 
   public async getManagementCanister() {
-    if (!this.identity || !this.requestedHost) return;
+    if (!this.agent || !this.identity || !this.requestedHost) return;
 
-    function transform(methodName, args, callConfig) {
-      const first = args[0] as any;
-      let effectiveCanisterId = Principal.fromHex('');
-      if (first && typeof first === 'object' && first.canister_id) {
-        effectiveCanisterId = Principal.from(first.canister_id as unknown);
-      }
-      return { effectiveCanisterId };
-    }
-
-    const agent = new HttpAgent({
-      host: this.requestedHost,
-      identity: this.identity,
-    });
+    const agent = this.agent;
 
     return Actor.createActor(managementCanisterIdlFactory, {
       agent,
-      canisterId: Principal.fromHex(''),
+      canisterId: managementCanisterPrincipal,
       ...{
-        callTransform: transform,
-        queryTransform: transform,
+        callTransform: transformOverrideHandler,
+        queryTransform: transformOverrideHandler,
       },
     });
   }

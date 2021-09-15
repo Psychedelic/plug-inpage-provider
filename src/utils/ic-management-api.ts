@@ -1,3 +1,6 @@
+import { Principal } from '@dfinity/principal';
+import { CallConfig } from '@dfinity/agent';
+
 export const managementCanisterIdlFactory = ({ IDL }) => {
   const canister_id = IDL.Principal;
   const definite_canister_settings = IDL.Record({
@@ -104,4 +107,30 @@ export const managementCanisterIdlFactory = ({ IDL }) => {
         [],
       ),
   });
+};
+
+export interface TransformArguments {
+  canister_id: String,
+}
+
+export const managementCanisterPrincipal = Principal.fromHex('');
+
+export const transformOverrideHandler = (
+  methodName: string,
+  args: TransformArguments[],
+  callConfig: CallConfig,
+) => {
+  let overridable = {
+    effectiveCanisterId: managementCanisterPrincipal,
+  }
+
+  if (!Array.isArray(args) || !args.length) return overridable;
+
+  if (args[0].hasOwnProperty('canister_id') && args[0].canister_id) {
+    overridable = {
+      effectiveCanisterId: Principal.from(args[0].canister_id),
+    }
+  }
+
+  return overridable;
 };
