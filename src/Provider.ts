@@ -38,7 +38,6 @@ interface CreateActor<T> {
   actor: ActorSubclass<ActorSubclass<T>>;
   canisterId: string;
   interfaceFactory: IDL.InterfaceFactory;
-  effectiveCanisterId?: Principal;
 }
 
 interface RequestConnectParams {
@@ -66,7 +65,6 @@ export interface ProviderInterface {
   createActor<T>({
     canisterId,
     interfaceFactory,
-    effectiveCanisterId,
   }: CreateActor<T>): Promise<ActorSubclass<T>>;
   agent: Agent | null;
   createAgent(params: CreateAgentParams): Promise<boolean>;
@@ -97,14 +95,12 @@ export default class Provider implements ProviderInterface {
   public async createActor<T>({
     canisterId,
     interfaceFactory,
-    effectiveCanisterId,
   }: CreateActor<T>): Promise<ActorSubclass<T>> {
     if (!this.agent) throw Error('Oops! Agent initialization required.');
 
     return Actor.createActor(interfaceFactory, {
       agent: this.agent,
       canisterId,
-      effectiveCanisterId,
     })
   }
 
