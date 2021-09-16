@@ -185,7 +185,6 @@ export default class Provider implements ProviderInterface {
       }
     });
 
-
     if (
       !whitelist
       || !Array.isArray(whitelist)
@@ -258,7 +257,7 @@ export default class Provider implements ProviderInterface {
         timeout: 0,
         target: ""
       },
-    });
+    })
   }
 
   public async sign(payload: ArrayBuffer): Promise<ArrayBuffer> {
