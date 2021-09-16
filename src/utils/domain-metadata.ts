@@ -71,10 +71,6 @@ const getIcons = () => {
         ) {
           let absoluteHref = `${window.location.protocol}//${window.location.host}`;
 
-          if (window.location.port) {
-            absoluteHref += `:${window.location.port}`;
-          }
-
           if (href.indexOf('/') === 0) {
             absoluteHref += href;
           } else {
