@@ -112,20 +112,32 @@ export default class Provider implements ProviderInterface {
   }): Promise<any> {
     const metadata = getDomainMetadata();
 
+    const handleCallSuccess = (result) => {
+      return result
+    };
+
+    const handleCallFailure = async (error) => {
+      const params = error.message;
+
+      if (error.message === "Request Timeout") {
+        return await this.clientRPC.call('handleTimeout', [metadata, params], {
+          timeout: 0,
+          target: "",
+        });
+      }
+
+      return await this.clientRPC.call('handleError', [metadata, params], {
+        timeout: 0,
+        target: "",
+      });
+    };
+
     return this.clientRPC.call(
       handler,
       args,
       config,
     )
-    .then((callResult) => {
-      return callResult;
-    })
-    .catch(async () => {
-      return await this.clientRPC.call('handleTimeout', [metadata], {
-        timeout: 0,
-        target: "",
-      });
-    });
+    .then(handleCallSuccess, handleCallFailure);
   }
 
   public deleteAgent() {
