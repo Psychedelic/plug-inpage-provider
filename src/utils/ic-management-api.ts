@@ -115,17 +115,36 @@ export interface TransformArguments {
 
 export const managementCanisterPrincipal = Principal.fromHex('');
 
+/**
+ * Used as a handler that overrides CallConfig calls
+ * See the @dfinity/agent callTransform and queryTransform fn signatures
+ * E.g. the `canister_status` is called by passing an object with canister_id
+ * that we override based in a particular condition, as documented in
+ * (https://sdk.dfinity.org/docs/interface-spec/index.html#http-effective-canister-id)
+ *
+ * @param transformOverrideHandler
+ * @param methodName the method name that we're interested in
+ * @param args any value passed to the Management API endpoint call
+ * @param callConfig configuration that can be passed to customize the Actor behaviour
+ * @returns an object containing the key of the computed effective canister id
+ */
 export const transformOverrideHandler = (
   methodName: string,
   args: TransformArguments[],
   callConfig: CallConfig,
 ) => {
+  // If the call is to the Management Canister (aaaaa-aa),
+  // in which it falls back to
   let overridable = {
     effectiveCanisterId: managementCanisterPrincipal,
   }
 
+  // We're only interested in the first argument
   if (!Array.isArray(args) || !args.length) return overridable;
 
+  // If the arg is Candid-encoded where the first argument is a record
+  // with a canister_id field of type principal, then the effective
+  // canister id is that principal.
   if (args[0].hasOwnProperty('canister_id') && args[0].canister_id) {
     overridable = {
       effectiveCanisterId: Principal.from(args[0].canister_id),
