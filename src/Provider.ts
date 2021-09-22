@@ -69,10 +69,13 @@ export interface ProviderInterface {
   agent: Agent | null;
   createAgent(params: CreateAgentParams): Promise<boolean>;
   requestBurnXTC(params: RequestBurnXTCParams): Promise<any>;
+  version: string;
 };
 
 export default class Provider implements ProviderInterface {
   public agent: Agent | null;
+  public version: string;
+  public providerVersion: string;
   // @ts-ignore
   public principal: Principal;
   private clientRPC: BrowserRPC;
@@ -81,6 +84,8 @@ export default class Provider implements ProviderInterface {
     this.clientRPC = clientRPC;
     this.clientRPC.start();
     this.agent = null;
+    this.version = "0.3.4";
+    this.providerVersion = "1.2.1";
   }
 
   public deleteAgent() {
