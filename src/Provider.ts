@@ -3,13 +3,13 @@ import { Agent, HttpAgent, Actor, ActorSubclass } from '@dfinity/agent';
 import { IDL } from '@dfinity/candid';
 import { Principal } from '@dfinity/principal';
 import getDomainMetadata from './utils/domain-metadata';
+import packageJSON from '../package.json';
 import {
   managementCanisterIdlFactory,
   managementCanisterPrincipal,
   transformOverrideHandler,
 } from './utils/ic-management-api';
 import { PlugIdentity } from './identity';
-import { versions } from './constants';
 
 export interface RequestConnectInput {
   canisters?: Principal[];
@@ -85,11 +85,11 @@ export default class Provider implements ProviderInterface {
   public principal: Principal;
   private clientRPC: BrowserRPC;
 
-  constructor(clientRPC: BrowserRPC) {
+  constructor(clientRPC: BrowserRPC, extensionVersion: string) {
     this.clientRPC = clientRPC;
     this.clientRPC.start();
     this.agent = null;
-    this.versions = versions
+    this.versions = {provider: packageJSON.version, extension: extensionVersion};
   }
 
   public deleteAgent() {
