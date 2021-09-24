@@ -3,11 +3,13 @@ import {
   PublicKey,
   HttpAgentRequest,
   ReadRequestType,
+  DerEncodedPublicKey,
+  Signature,
 } from "@dfinity/agent";
-import { BinaryBlob, blobFromBuffer, DerEncodedBlob } from "@dfinity/candid";
 import { Principal } from "@dfinity/principal";
 import { Buffer } from "buffer/";
 import { requestIdOf } from "./utils/request_id";
+import { concat } from "./utils/buffer";
 
 type SignCb = (payload: ArrayBuffer) => Promise<ArrayBuffer>;
 
@@ -19,7 +21,7 @@ interface SerializedPublicKey {
   };
   derKey: {
     type: string;
-    data: DerEncodedBlob;
+    data: DerEncodedPublicKey;
   };
 }
 export class PlugIdentity extends SignIdentity {
@@ -43,14 +45,16 @@ export class PlugIdentity extends SignIdentity {
     return this.publicKey;
   }
 
-  async sign(blob: BinaryBlob): Promise<BinaryBlob> {
+  async sign(blob: ArrayBuffer): Promise<Signature> {
     const res = await this.signCb(blob);
-    return res as BinaryBlob;
+    return res as Signature;
   }
 
   getPrincipal(): Principal {
     if (!this._principal) {
-      this._principal = Principal.selfAuthenticating(this.publicKey.toDer());
+      this._principal = Principal.selfAuthenticating(
+        new Uint8Array(this.publicKey.toDer())
+      );
     }
     return this._principal;
   }
@@ -81,7 +85,7 @@ export class PlugIdentity extends SignIdentity {
 
     const requestId = await requestIdOf(body);
     const sender_sig = await this.sign(
-      blobFromBuffer(Buffer.concat([domainSeparator, requestId]))
+      concat(new Uint8Array(domainSeparator), requestId)
     );
 
     const transformedResponse = {
