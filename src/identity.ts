@@ -3,10 +3,11 @@ import {
   PublicKey,
   HttpAgentRequest,
   ReadRequestType,
-  DerEncodedPublicKey,
   Signature,
+  DerEncodedPublicKey,
 } from "@dfinity/agent";
 import { Principal } from "@dfinity/principal";
+
 import { Buffer } from "buffer/";
 import { requestIdOf } from "./utils/request_id";
 import { concat } from "./utils/buffer";
@@ -14,28 +15,18 @@ import { concat } from "./utils/buffer";
 type SignCb = (payload: ArrayBuffer) => Promise<ArrayBuffer>;
 
 const domainSeparator = Buffer.from(new TextEncoder().encode("\x0Aic-request"));
-interface SerializedPublicKey {
-  rawKey: {
-    type: string;
-    data: Uint8Array;
-  };
-  derKey: {
-    type: string;
-    data: DerEncodedPublicKey;
-  };
-}
 export class PlugIdentity extends SignIdentity {
   private publicKey: PublicKey;
   private whitelist: string[];
   constructor(
-    publicKey: SerializedPublicKey,
+    derPublicKey: Uint8Array,
     private signCb: SignCb,
     whitelist: string[]
   ) {
     super();
     this.publicKey = {
-      ...publicKey,
-      toDer: () => publicKey.derKey?.data ?? publicKey.derKey,
+      ...derPublicKey.buffer,
+      toDer: () => derPublicKey.buffer as unknown as DerEncodedPublicKey,
     };
     this.signCb = signCb;
     this.whitelist = whitelist || [];
@@ -84,16 +75,13 @@ export class PlugIdentity extends SignIdentity {
     }
 
     const requestId = await requestIdOf(body);
-    const sender_sig = await this.sign(
-      concat(new Uint8Array(domainSeparator), requestId)
-    );
 
     const transformedResponse = {
       ...fields,
       body: {
         content: body,
         sender_pubkey: this.getPublicKey().toDer(),
-        sender_sig,
+        sender_sig: await this.sign(concat(domainSeparator, requestId)),
       },
     };
     return transformedResponse;
