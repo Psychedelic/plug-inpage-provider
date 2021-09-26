@@ -9,6 +9,7 @@ import {
   transformOverrideHandler,
 } from './utils/ic-management-api';
 import { PlugIdentity } from './identity';
+import { versions } from './constants';
 
 export interface RequestConnectInput {
   canisters?: Principal[];
@@ -57,6 +58,11 @@ const DEFAULT_REQUEST_CONNECT_ARGS: RequestConnectParams = {
   host: DEFAULT_HOST,
 };
 
+export interface ProviderInterfaceVersions {
+  provider: string;
+  extension: string;
+}
+
 export interface ProviderInterface {
   isConnected(): Promise<boolean>;
   requestBalance(accountId?: number): Promise<bigint>;
@@ -69,10 +75,12 @@ export interface ProviderInterface {
   agent: Agent | null;
   createAgent(params: CreateAgentParams): Promise<boolean>;
   requestBurnXTC(params: RequestBurnXTCParams): Promise<any>;
+  versions: ProviderInterfaceVersions
 };
 
 export default class Provider implements ProviderInterface {
   public agent: Agent | null;
+  public versions: ProviderInterfaceVersions;
   // @ts-ignore
   public principal: Principal;
   private clientRPC: BrowserRPC;
@@ -81,6 +89,7 @@ export default class Provider implements ProviderInterface {
     this.clientRPC = clientRPC;
     this.clientRPC.start();
     this.agent = null;
+    this.versions = versions
   }
 
   public deleteAgent() {
