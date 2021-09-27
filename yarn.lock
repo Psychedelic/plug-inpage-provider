@@ -348,7 +348,7 @@
     minimatch "^3.0.4"
     strip-json-comments "^3.1.1"
 
-"@fleekhq/browser-rpc@^2.0.2":
+"@fleekhq/browser-rpc@^2.0.3":
   version "2.0.2"
   resolved "https://registry.yarnpkg.com/@fleekhq/browser-rpc/-/browser-rpc-2.0.2.tgz#6621a4e9191d45edb267c987b982132bfc83997e"
   integrity sha512-JDojYoxGF0WmXVhlkvA8oLWk+aaQhuI65ayzahAz69+cZeYlCOkkxTBICz/s40gJgWV6qvPbLMPxUjaCPSZZ/Q==
