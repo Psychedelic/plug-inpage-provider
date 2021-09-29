@@ -84,9 +84,7 @@ const signFactory =
   (clientRPC) =>
   async (payload: ArrayBuffer): Promise<ArrayBuffer> => {
     const metadata = getDomainMetadata();
-    console.log("PayloadInp", payload);
     const payloadArr = new Uint8Array(payload);
-    console.log("PayloadArrInp", payloadArr);
     const res = await clientRPC.call("sign", [payloadArr, metadata], {
       timeout: 0,
       target: "",
@@ -211,18 +209,6 @@ export default class Provider implements ProviderInterface {
       timeout: 0,
       target: "",
     });
-  }
-
-  public async sign(payload: ArrayBuffer): Promise<ArrayBuffer> {
-    const metadata = getDomainMetadata();
-    console.log("PayloadInp", payload);
-    const payloadArr = new Uint8Array(payload);
-    console.log("PayloadArrInp", payloadArr);
-    const res = await this.clientRPC.call("sign", [payloadArr, metadata], {
-      timeout: 0,
-      target: "",
-    });
-    return new Uint8Array(Object.values(res));
   }
 
   public async requestBurnXTC(params: RequestBurnXTCParams): Promise<any> {
