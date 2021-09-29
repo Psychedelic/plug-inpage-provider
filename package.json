@@ -58,6 +58,6 @@
     "@dfinity/agent": "^0.9.2",
     "@dfinity/candid": "^0.9.2",
     "@dfinity/principal": "^0.9.2",
-    "@fleekhq/browser-rpc": "^2.0.2"
+    "@fleekhq/browser-rpc": "^2.0.3"
   }
 }
