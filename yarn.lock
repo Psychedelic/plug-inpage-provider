@@ -349,9 +349,9 @@
     strip-json-comments "^3.1.1"
 
 "@fleekhq/browser-rpc@^2.0.3":
-  version "2.0.2"
-  resolved "https://registry.yarnpkg.com/@fleekhq/browser-rpc/-/browser-rpc-2.0.2.tgz#6621a4e9191d45edb267c987b982132bfc83997e"
-  integrity sha512-JDojYoxGF0WmXVhlkvA8oLWk+aaQhuI65ayzahAz69+cZeYlCOkkxTBICz/s40gJgWV6qvPbLMPxUjaCPSZZ/Q==
+  version "2.0.3"
+  resolved "https://registry.yarnpkg.com/@fleekhq/browser-rpc/-/browser-rpc-2.0.3.tgz#d85e4ebd593aad2f2d8b56bab259e3947f623bfa"
+  integrity sha512-TFj5/kOMoBqNUBp7Kf/ONrkXTVhhLcATlJYiUZmVWi8KRb+wtR2/Osvm0TrBxepUahT3Sv8bDPjMa11hg00iRQ==
   dependencies:
     extensionizer "^1.0.1"
     joi "^17.4.0"

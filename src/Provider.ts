@@ -85,12 +85,6 @@ type CallConfigObject = {
   target?: string;
 };
 
-type clientRPCCall = {
-  handler: string;
-  args?: any[] | null;
-  config?: CallConfigObject;
-};
-
 const signFactory =
   (clientRPC) =>
   async (payload: ArrayBuffer): Promise<ArrayBuffer> => {
@@ -203,11 +197,7 @@ export default class Provider implements ProviderInterface {
       || !whitelist.length
     ) return response;
 
-    const identity = new PlugIdentity(
-      new Uint8Array(Object.values(response)),
-      signFactory(this.clientRPC),
-      whitelist
-    );
+    const identity = new PlugIdentity(response, signFactory(this.clientRPC), whitelist);
 
     this.agent = new HttpAgent({
       identity,
@@ -232,11 +222,7 @@ export default class Provider implements ProviderInterface {
       }
     });
 
-    const identity = new PlugIdentity(
-      new Uint8Array(Object.values(publicKey)),
-      signFactory(this.clientRPC),
-      whitelist
-    );
+    const identity = new PlugIdentity(publicKey, signFactory(this.clientRPC), whitelist);
 
     this.agent = new HttpAgent({
       identity,
