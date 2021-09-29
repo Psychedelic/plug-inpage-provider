@@ -53,6 +53,13 @@ interface RequestBurnXTCParams {
   amount: bigint;
 }
 
+type WrappedActorConstructor = new () => ActorSubclass;
+
+interface OldPrincipal {
+  _blob: Uint8Array;
+  _isPrincipal: boolean;
+}
+
 const DEFAULT_HOST = "https://mainnet.dfinity.network";
 /* eslint-disable @typescript-eslint/no-unused-vars */
 const DEFAULT_REQUEST_CONNECT_ARGS: RequestConnectParams = {
@@ -92,6 +99,41 @@ const signFactory =
     return new Uint8Array(Object.values(res));
   };
 
+const createWrappedActorClass = (
+  agent: Agent,
+  canisterId: string,
+  IDLFactory: IDL.InterfaceFactory
+): WrappedActorConstructor => {
+  class WrappedActor extends Actor.createActorClass(IDLFactory) {
+    constructor() {
+      super({ agent, canisterId });
+
+      const methodNamesArr: string[] = [];
+
+      Object.keys(this).forEach((methodName) => {
+        methodNamesArr.push(methodName);
+        this[`_${methodName}`] = this[methodName];
+      });
+
+      methodNamesArr.forEach((methodName) => {
+        const handlerWrapped = (...args: unknown[]) => {
+          const scapedArgs = args.map((arg) => {
+            const wrappedArg = arg as OldPrincipal;
+            return wrappedArg._isPrincipal && wrappedArg._blob
+              ? Principal.fromUint8Array((arg as OldPrincipal)._blob)
+              : arg;
+          });
+          return this[`_${methodName}`](...scapedArgs);
+        };
+        handlerWrapped.withOptions = this[`_${methodName}`].withOptions;
+        this[methodName] = handlerWrapped;
+      });
+    }
+  }
+
+  return WrappedActor;
+};
+
 export default class Provider implements ProviderInterface {
   public agent: Agent | null;
   public versions: ProviderInterfaceVersions;
@@ -117,10 +159,11 @@ export default class Provider implements ProviderInterface {
   }: CreateActor<T>): Promise<ActorSubclass<T>> {
     if (!this.agent) throw Error("Oops! Agent initialization required.");
 
-    return Actor.createActor(interfaceFactory, {
-      agent: this.agent,
+    return new (createWrappedActorClass(
+      this.agent,
       canisterId,
-    });
+      interfaceFactory
+    ))() as unknown as ActorSubclass<T>;
   }
 
   public async isConnected(): Promise<boolean> {
