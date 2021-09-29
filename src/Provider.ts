@@ -117,7 +117,8 @@ const createWrappedActorClass = (
       methodNamesArr.forEach((methodName) => {
         const handlerWrapped = (...args: unknown[]) => {
           const scapedArgs = args.map((arg) => {
-            return (arg as OldPrincipal)._isPrincipal
+            const wrappedArg = arg as OldPrincipal;
+            return wrappedArg._isPrincipal && wrappedArg._blob
               ? Principal.fromUint8Array((arg as OldPrincipal)._blob)
               : arg;
           });
