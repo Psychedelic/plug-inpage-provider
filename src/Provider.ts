@@ -87,6 +87,17 @@ export interface ProviderInterface {
   versions: ProviderInterfaceVersions;
 }
 
+type CallConfigObject = {
+  timeout?: number;
+  target?: string;
+};
+
+type clientRPCCall = {
+  handler: string;
+  args?: any[] | null;
+  config?: CallConfigObject;
+};
+
 const signFactory =
   (clientRPC) =>
   async (payload: ArrayBuffer): Promise<ArrayBuffer> => {
@@ -148,6 +159,41 @@ export default class Provider implements ProviderInterface {
     this.versions = versions;
   }
 
+  private async callClientRPC({
+    handler,
+    args,
+    config,
+  }): Promise<any> {
+    const metadata = getDomainMetadata();
+
+    const handleCallSuccess = (result) => {
+      return result
+    };
+
+    const handleCallFailure = async (error) => {
+      const params = error.message;
+
+      if (error.message === "Request Timeout") {
+        return await this.clientRPC.call('handleTimeout', [metadata, params], {
+          timeout: 0,
+          target: "",
+        });
+      }
+
+      return await this.clientRPC.call('handleError', [metadata, params], {
+        timeout: 0,
+        target: "",
+      });
+    };
+
+    return this.clientRPC.call(
+      handler,
+      args,
+      config,
+    )
+    .then(handleCallSuccess, handleCallFailure);
+  }
+
   public deleteAgent() {
     this.agent = null;
     return;
@@ -169,9 +215,13 @@ export default class Provider implements ProviderInterface {
   public async isConnected(): Promise<boolean> {
     const metadata = getDomainMetadata();
 
-    return await this.clientRPC.call("isConnected", [metadata.url], {
-      timeout: 0,
-      target: "",
+    return await this.callClientRPC({
+      handler: 'isConnected',
+      args: [metadata.url],
+      config: {
+        timeout: 0,
+        target: "",
+      },
     });
   }
 
@@ -181,17 +231,20 @@ export default class Provider implements ProviderInterface {
   }: RequestConnectParams = DEFAULT_REQUEST_CONNECT_ARGS): Promise<any> {
     const metadata = getDomainMetadata();
 
-    const response = await this.clientRPC.call(
-      "requestConnect",
-      [metadata, whitelist],
-      {
+    const response = await this.callClientRPC({
+      handler: 'requestConnect',
+      args: [metadata, whitelist],
+      config: {
         timeout: 0,
         target: "",
       }
-    );
+    });
 
-    if (!whitelist || !Array.isArray(whitelist) || !whitelist.length)
-      return response;
+    if (
+      !whitelist
+      || !Array.isArray(whitelist)
+      || !whitelist.length
+    ) return response;
 
     const identity = new PlugIdentity(
       new Uint8Array(Object.values(response)),
@@ -213,14 +266,14 @@ export default class Provider implements ProviderInterface {
   }: CreateAgentParams = DEFAULT_REQUEST_CONNECT_ARGS): Promise<any> {
     const metadata = getDomainMetadata();
 
-    const publicKey = await this.clientRPC.call(
-      "verifyWhitelist",
-      [metadata, whitelist],
-      {
+    const publicKey = await this.callClientRPC({
+      handler: 'verifyWhitelist',
+      args: [metadata, whitelist],
+      config: {
         timeout: 0,
         target: "",
       }
-    );
+    });
 
     const identity = new PlugIdentity(
       new Uint8Array(Object.values(publicKey)),
@@ -239,27 +292,39 @@ export default class Provider implements ProviderInterface {
   public async requestBalance(accountId = 0): Promise<bigint> {
     const metadata = getDomainMetadata();
 
-    return await this.clientRPC.call("requestBalance", [metadata, accountId], {
-      timeout: 0,
-      target: "",
+    return await this.callClientRPC({
+      handler: 'requestBalance',
+      args: [metadata, accountId],
+      config: {
+        timeout: 0,
+        target: "",
+      },
     });
   }
 
   public async requestTransfer(params: RequestTransferParams): Promise<bigint> {
     const metadata = getDomainMetadata();
 
-    return await this.clientRPC.call("requestTransfer", [metadata, params], {
-      timeout: 0,
-      target: "",
-    });
+    return await this.callClientRPC({
+      handler: 'requestTransfer',
+      args: [metadata, params],
+      config: {
+        timeout: 0,
+        target: ""
+      },
+    })
   }
 
   public async requestBurnXTC(params: RequestBurnXTCParams): Promise<any> {
     const metadata = getDomainMetadata();
 
-    return await this.clientRPC.call("requestBurnXTC", [metadata, params], {
-      timeout: 0,
-      target: "",
+    return await this.callClientRPC({
+      handler: 'requestBurnXTC',
+      args: [metadata, params],
+      config: {
+        timeout: 0,
+        target: "",
+      }
     });
   }
 
