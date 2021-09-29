@@ -53,6 +53,13 @@ interface RequestBurnXTCParams {
   amount: bigint;
 }
 
+type WrappedActorConstructor = new () => ActorSubclass;
+
+interface OldPrincipal {
+  _blob: Uint8Array;
+  _isPrincipal: boolean;
+}
+
 const DEFAULT_HOST = "https://mainnet.dfinity.network";
 /* eslint-disable @typescript-eslint/no-unused-vars */
 const DEFAULT_REQUEST_CONNECT_ARGS: RequestConnectParams = {
@@ -91,12 +98,6 @@ const signFactory =
     });
     return new Uint8Array(Object.values(res));
   };
-type WrappedActorConstructor = new () => ActorSubclass;
-
-interface OldPrincipal {
-  _blob: Uint8Array;
-  _isPrincipal: boolean;
-}
 
 const createWrappedActorClass = (
   agent: Agent,
