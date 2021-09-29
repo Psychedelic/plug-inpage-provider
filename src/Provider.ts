@@ -78,6 +78,18 @@ export interface ProviderInterface {
   versions: ProviderInterfaceVersions
 };
 
+const signFactory =
+  (clientRPC) =>
+  async (payload: ArrayBuffer): Promise<ArrayBuffer> => {
+    const metadata = getDomainMetadata();
+    const payloadArr = new Uint8Array(payload);
+    const res = await clientRPC.call("sign", [payloadArr, metadata], {
+      timeout: 0,
+      target: "",
+    });
+    return new Uint8Array(Object.values(res));
+  };
+
 export default class Provider implements ProviderInterface {
   public agent: Agent | null;
   public versions: ProviderInterfaceVersions;
@@ -135,7 +147,7 @@ export default class Provider implements ProviderInterface {
       || !whitelist.length
     ) return response;
 
-    const identity = new PlugIdentity(response, this.sign.bind(this), whitelist);
+    const identity = new PlugIdentity(response, signFactory(this.clientRPC), whitelist);
 
     this.agent = new HttpAgent({
       identity,
@@ -156,7 +168,7 @@ export default class Provider implements ProviderInterface {
       target: "",
     });
 
-    const identity = new PlugIdentity(publicKey, this.sign.bind(this), whitelist);
+    const identity = new PlugIdentity(publicKey, signFactory(this.clientRPC), whitelist);
 
     this.agent = new HttpAgent({
       identity,
@@ -183,15 +195,6 @@ export default class Provider implements ProviderInterface {
       target: "",
     })
   }
-
-  public async sign(payload: ArrayBuffer): Promise<ArrayBuffer> {
-    const metadata = getDomainMetadata();
-    const res = await this.clientRPC.call('sign', [payload, metadata], {
-      timeout: 0,
-      target: "",
-    });
-    return new Uint8Array(res);
-  };
 
   public async requestBurnXTC(params: RequestBurnXTCParams): Promise<any> {
     const metadata = getDomainMetadata();
