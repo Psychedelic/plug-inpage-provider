@@ -67,6 +67,7 @@ export interface ProviderInterfaceVersions {
 
 export interface ProviderInterface {
   isConnected(): Promise<boolean>;
+  disconnect(): Promise<void>;
   requestBalance(accountId?: number): Promise<bigint>;
   requestTransfer(params: RequestTransferParams): Promise<bigint>;
   requestConnect(params: RequestConnectParams): Promise<any>;
