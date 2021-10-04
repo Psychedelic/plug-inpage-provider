@@ -7,9 +7,13 @@ import {
 import { BinaryBlob, blobFromBuffer, DerEncodedBlob } from "@dfinity/candid";
 import { Principal } from "@dfinity/principal";
 import { Buffer } from "buffer/";
+import { SignInfo } from "./Provider";
 import { requestIdOf } from "./utils/request_id";
 
-type SignCb = (payload: ArrayBuffer) => Promise<ArrayBuffer>;
+type SignCb = (
+  payload: ArrayBuffer,
+  signInfo?: SignInfo
+) => Promise<ArrayBuffer>;
 
 const domainSeparator = Buffer.from(new TextEncoder().encode("\x0Aic-request"));
 interface SerializedPublicKey {
@@ -43,8 +47,15 @@ export class PlugIdentity extends SignIdentity {
     return this.publicKey;
   }
 
-  async sign(blob: BinaryBlob): Promise<BinaryBlob> {
-    const res = await this.signCb(blob);
+  async sign(blob: BinaryBlob, signInfo?: any): Promise<BinaryBlob> {
+    const res = await this.signCb(blob, {
+      sender: signInfo.sender && Principal.from(signInfo.sender).toString(),
+      methodName: signInfo.method_name,
+      requestType: signInfo.request_type,
+      canisterId:
+        signInfo.canister_id && Principal.from(signInfo.canister_id).toString(),
+      manual: false,
+    });
     return res as BinaryBlob;
   }
 
@@ -81,7 +92,8 @@ export class PlugIdentity extends SignIdentity {
 
     const requestId = await requestIdOf(body);
     const sender_sig = await this.sign(
-      blobFromBuffer(Buffer.concat([domainSeparator, requestId]))
+      blobFromBuffer(Buffer.concat([domainSeparator, requestId])),
+      body
     );
 
     const transformedResponse = {
