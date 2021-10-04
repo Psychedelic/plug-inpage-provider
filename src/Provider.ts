@@ -176,6 +176,19 @@ export default class Provider implements ProviderInterface {
     });
   }
 
+  public async disconnect(): Promise<void> {
+    const metadata = getDomainMetadata();
+
+    await this.callClientRPC({
+      handler: 'disconnect',
+      args: [metadata.url],
+      config: {
+        timeout: 0,
+        target: "",
+      }
+    });
+  }
+
   public async requestConnect({
     whitelist = DEFAULT_REQUEST_CONNECT_ARGS.whitelist,
     host = DEFAULT_REQUEST_CONNECT_ARGS.host,
