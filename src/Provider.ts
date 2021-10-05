@@ -67,6 +67,7 @@ export interface ProviderInterfaceVersions {
 
 export interface ProviderInterface {
   isConnected(): Promise<boolean>;
+  disconnect(): Promise<void>;
   requestBalance(accountId?: number): Promise<bigint>;
   requestTransfer(params: RequestTransferParams): Promise<bigint>;
   requestConnect(params: RequestConnectParams): Promise<any>;
@@ -173,6 +174,19 @@ export default class Provider implements ProviderInterface {
         timeout: 0,
         target: "",
       },
+    });
+  }
+
+  public async disconnect(): Promise<void> {
+    const metadata = getDomainMetadata();
+
+    await this.callClientRPC({
+      handler: 'disconnect',
+      args: [metadata.url],
+      config: {
+        timeout: 0,
+        target: "",
+      }
     });
   }
 
