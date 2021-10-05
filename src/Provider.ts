@@ -1,7 +1,9 @@
 import BrowserRPC from "@fleekhq/browser-rpc/dist/BrowserRPC";
 import { Agent, HttpAgent, Actor, ActorSubclass } from "@dfinity/agent";
-import { IDL } from "@dfinity/candid";
+import { IDL, JsonValue } from "@dfinity/candid";
 import { Principal } from "@dfinity/principal";
+import { Buffer } from "buffer/";
+
 import getDomainMetadata from "./utils/domain-metadata";
 import {
   managementCanisterIdlFactory,
@@ -84,14 +86,52 @@ export interface SignInfo {
   requestType?: string;
   canisterId?: string;
   sender?: string;
+  arguments?: Buffer;
+  decodedArguments?: JsonValue;
   manual: boolean;
 }
 
+export interface AssuredSignInfo {
+  methodName: string;
+  requestType: string;
+  canisterId: string;
+  sender: string;
+  arguments: Buffer;
+  decodedArguments?: JsonValue;
+  manual: boolean;
+}
+
+type ArgsTypesOfCanister = { [key: string]: { [key: string]: any } };
+
+const canDecodeArgs = (
+  signInfo: SignInfo | undefined,
+  argsTypes: ArgsTypesOfCanister
+): boolean => {
+  return !!(
+    signInfo?.canisterId &&
+    signInfo?.methodName &&
+    signInfo?.arguments &&
+    argsTypes[signInfo.canisterId]?.[signInfo.methodName]
+  );
+};
+
+const decodeArgs = (signInfo: SignInfo, argsTypes: ArgsTypesOfCanister) => {
+  if (canDecodeArgs(signInfo, argsTypes)) {
+    const assuredSignInfo = signInfo as AssuredSignInfo;
+    const funArgumentsTypes =
+      argsTypes[assuredSignInfo.canisterId][assuredSignInfo.methodName];
+    return IDL.decode(funArgumentsTypes, assuredSignInfo.arguments);
+  }
+};
+
 const signFactory =
-  (clientRPC) =>
+  (clientRPC, argsTypes: ArgsTypesOfCanister) =>
   async (payload: ArrayBuffer, signInfo?: SignInfo): Promise<ArrayBuffer> => {
     const metadata = getDomainMetadata();
     const payloadArr = new Uint8Array(payload);
+
+    if (signInfo) signInfo.decodedArguments = decodeArgs(signInfo, argsTypes);
+
     const res = await clientRPC.call(
       "requestSign",
       [payloadArr, metadata, signInfo],
@@ -103,12 +143,22 @@ const signFactory =
     return new Uint8Array(Object.values(res));
   };
 
+const getArgTypes = (interfaceFactory: IDL.InterfaceFactory) => {
+  const service = interfaceFactory({ IDL });
+  const methodArgType = {};
+  service._fields.forEach(
+    ([methodName, fun]) => (methodArgType[methodName] = fun.argTypes)
+  );
+  return methodArgType;
+};
+
 export default class Provider implements ProviderInterface {
   public agent: Agent | null;
   public versions: ProviderInterfaceVersions;
   // @ts-ignore
   public principal: Principal;
   private clientRPC: BrowserRPC;
+  private idls: ArgsTypesOfCanister = {};
 
   constructor(clientRPC: BrowserRPC) {
     this.clientRPC = clientRPC;
@@ -156,6 +206,8 @@ export default class Provider implements ProviderInterface {
   }: CreateActor<T>): Promise<ActorSubclass<T>> {
     if (!this.agent) throw Error("Oops! Agent initialization required.");
 
+    this.idls[canisterId] = getArgTypes(interfaceFactory);
+
     return Actor.createActor(interfaceFactory, {
       agent: this.agent,
       canisterId,
@@ -195,7 +247,7 @@ export default class Provider implements ProviderInterface {
 
     const identity = new PlugIdentity(
       response,
-      signFactory(this.clientRPC),
+      signFactory(this.clientRPC, this.idls),
       whitelist
     );
 
@@ -224,7 +276,7 @@ export default class Provider implements ProviderInterface {
 
     const identity = new PlugIdentity(
       publicKey,
-      signFactory(this.clientRPC),
+      signFactory(this.clientRPC, this.idls),
       whitelist
     );
 

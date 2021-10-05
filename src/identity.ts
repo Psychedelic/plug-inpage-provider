@@ -3,6 +3,8 @@ import {
   PublicKey,
   HttpAgentRequest,
   ReadRequestType,
+  ReadRequest,
+  CallRequest,
 } from "@dfinity/agent";
 import { BinaryBlob, blobFromBuffer, DerEncodedBlob } from "@dfinity/candid";
 import { Principal } from "@dfinity/principal";
@@ -14,6 +16,8 @@ type SignCb = (
   payload: ArrayBuffer,
   signInfo?: SignInfo
 ) => Promise<ArrayBuffer>;
+
+type RequestType = ReadRequest | CallRequest;
 
 const domainSeparator = Buffer.from(new TextEncoder().encode("\x0Aic-request"));
 interface SerializedPublicKey {
@@ -47,13 +51,15 @@ export class PlugIdentity extends SignIdentity {
     return this.publicKey;
   }
 
-  async sign(blob: BinaryBlob, signInfo?: any): Promise<BinaryBlob> {
+  async sign(blob: BinaryBlob, signInfo?: RequestType): Promise<BinaryBlob> {
     const res = await this.signCb(blob, {
-      sender: signInfo.sender && Principal.from(signInfo.sender).toString(),
-      methodName: signInfo.method_name,
-      requestType: signInfo.request_type,
+      sender: signInfo?.sender && Principal.from(signInfo.sender).toString(),
+      methodName: signInfo?.method_name,
+      requestType: signInfo?.request_type,
       canisterId:
-        signInfo.canister_id && Principal.from(signInfo.canister_id).toString(),
+        signInfo?.canister_id &&
+        Principal.from(signInfo.canister_id).toString(),
+      arguments: signInfo?.arg,
       manual: false,
     });
     return res as BinaryBlob;
