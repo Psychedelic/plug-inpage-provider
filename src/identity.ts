@@ -9,7 +9,7 @@ import {
 import { BinaryBlob, blobFromBuffer, DerEncodedBlob } from "@dfinity/candid";
 import { Principal } from "@dfinity/principal";
 import { Buffer } from "buffer/";
-import { SignInfo } from "./Provider";
+import { SignInfo } from "./utils/sign";
 import { requestIdOf } from "./utils/request_id";
 
 type SignCb = (

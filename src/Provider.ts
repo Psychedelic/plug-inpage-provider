@@ -1,8 +1,7 @@
 import BrowserRPC from "@fleekhq/browser-rpc/dist/BrowserRPC";
 import { Agent, HttpAgent, Actor, ActorSubclass } from "@dfinity/agent";
-import { IDL, JsonValue } from "@dfinity/candid";
+import { IDL } from "@dfinity/candid";
 import { Principal } from "@dfinity/principal";
-import { Buffer } from "buffer/";
 
 import getDomainMetadata from "./utils/domain-metadata";
 import {
@@ -12,6 +11,7 @@ import {
 } from "./utils/ic-management-api";
 import { PlugIdentity } from "./identity";
 import { versions } from "./constants";
+import { signFactory, getArgTypes, ArgsTypesOfCanister } from "./utils/sign";
 
 export interface RequestConnectInput {
   canisters?: Principal[];
@@ -81,76 +81,6 @@ export interface ProviderInterface {
   requestBurnXTC(params: RequestBurnXTCParams): Promise<any>;
   versions: ProviderInterfaceVersions;
 }
-export interface SignInfo {
-  methodName?: string;
-  requestType?: string;
-  canisterId?: string;
-  sender?: string;
-  arguments?: Buffer;
-  decodedArguments?: JsonValue;
-  manual: boolean;
-}
-
-export interface AssuredSignInfo {
-  methodName: string;
-  requestType: string;
-  canisterId: string;
-  sender: string;
-  arguments: Buffer;
-  decodedArguments?: JsonValue;
-  manual: boolean;
-}
-
-type ArgsTypesOfCanister = { [key: string]: { [key: string]: any } };
-
-const canDecodeArgs = (
-  signInfo: SignInfo | undefined,
-  argsTypes: ArgsTypesOfCanister
-): boolean => {
-  return !!(
-    signInfo?.canisterId &&
-    signInfo?.methodName &&
-    signInfo?.arguments &&
-    argsTypes[signInfo.canisterId]?.[signInfo.methodName]
-  );
-};
-
-const decodeArgs = (signInfo: SignInfo, argsTypes: ArgsTypesOfCanister) => {
-  if (canDecodeArgs(signInfo, argsTypes)) {
-    const assuredSignInfo = signInfo as AssuredSignInfo;
-    const funArgumentsTypes =
-      argsTypes[assuredSignInfo.canisterId][assuredSignInfo.methodName];
-    return IDL.decode(funArgumentsTypes, assuredSignInfo.arguments);
-  }
-};
-
-const signFactory =
-  (clientRPC, argsTypes: ArgsTypesOfCanister) =>
-  async (payload: ArrayBuffer, signInfo?: SignInfo): Promise<ArrayBuffer> => {
-    const metadata = getDomainMetadata();
-    const payloadArr = new Uint8Array(payload);
-
-    if (signInfo) signInfo.decodedArguments = decodeArgs(signInfo, argsTypes);
-
-    const res = await clientRPC.call(
-      "requestSign",
-      [payloadArr, metadata, signInfo],
-      {
-        timeout: 0,
-        target: "",
-      }
-    );
-    return new Uint8Array(Object.values(res));
-  };
-
-const getArgTypes = (interfaceFactory: IDL.InterfaceFactory) => {
-  const service = interfaceFactory({ IDL });
-  const methodArgType = {};
-  service._fields.forEach(
-    ([methodName, fun]) => (methodArgType[methodName] = fun.argTypes)
-  );
-  return methodArgType;
-};
 
 export default class Provider implements ProviderInterface {
   public agent: Agent | null;
