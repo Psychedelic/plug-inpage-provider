@@ -78,6 +78,7 @@ export interface ProviderInterfaceVersions {
 export interface ProviderInterface {
   isConnected(): Promise<boolean>;
   disconnect(): Promise<void>;
+  batchTransactions(transactions: Transaction[]): Promise<boolean>;
   requestBalance(accountId?: number): Promise<bigint>;
   requestTransfer(params: RequestTransferParams): Promise<bigint>;
   requestConnect(params: RequestConnectParams): Promise<any>;
@@ -266,7 +267,7 @@ export default class Provider implements ProviderInterface {
     });
   }
 
-  public async batchTransactions(transactions: Transaction[]) : Promise<unknown> {
+  public async batchTransactions(transactions: Transaction[]) : Promise<boolean> {
     const metadata = getDomainMetadata();
 
     return await this.callClientRPC({
