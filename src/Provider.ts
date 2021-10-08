@@ -13,6 +13,14 @@ import { PlugIdentity } from "./identity";
 import { versions } from "./constants";
 import { signFactory, getArgTypes, ArgsTypesOfCanister } from "./utils/sign";
 
+export interface Transaction<SuccessReturn = unknown, FailReturn = unknown, SuccessResponse = unknown, FailResponse = unknown, PrevResponse = unknown> {
+  idl: IDL.InterfaceFactory;
+  methodName: string;
+  args: ((prevRes: PrevResponse) => any[]) | any[];
+  onSuccess: (res: SuccessResponse) => Promise<SuccessReturn>;
+  onFail: (res: FailResponse) => Promise<FailReturn>;
+}
+
 export interface RequestConnectInput {
   canisters?: Principal[];
   timeout?: number;
@@ -254,6 +262,19 @@ export default class Provider implements ProviderInterface {
       config: {
         timeout: 0,
         target: "",
+      },
+    });
+  }
+
+  public async batchTransactions(transactions: Transaction[]) : Promise<unknown> {
+    const metadata = getDomainMetadata();
+
+    return await this.callClientRPC({
+      handler: "batchTransactions",
+      args: [metadata, transactions],
+      config: {
+        timeout: 0,
+        target: ""
       },
     });
   }
