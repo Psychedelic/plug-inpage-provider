@@ -13,10 +13,10 @@ import { PlugIdentity } from "./identity";
 import { versions } from "./constants";
 import { signFactory, getArgTypes, ArgsTypesOfCanister } from "./utils/sign";
 
-export interface Transaction<SuccessReturn = unknown, FailReturn = unknown, SuccessResponse = unknown, FailResponse = unknown, PrevResponse = unknown> {
+export interface Transaction<SuccessReturn = unknown, FailReturn = unknown, SuccessResponse = unknown, FailResponse = unknown> {
   idl: IDL.InterfaceFactory;
   methodName: string;
-  args: ((prevRes: PrevResponse) => any[]) | any[];
+  args: any[];
   onSuccess: (res: SuccessResponse) => Promise<SuccessReturn>;
   onFail: (res: FailResponse) => Promise<FailReturn>;
 }
