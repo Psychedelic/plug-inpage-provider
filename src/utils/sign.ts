@@ -11,7 +11,6 @@ export interface SignInfo {
   arguments?: Buffer;
   decodedArguments?: JsonValue;
   manual: boolean;
-  preAprove: boolean;
 }
 
 export interface AssuredSignInfo {
@@ -22,6 +21,7 @@ export interface AssuredSignInfo {
   arguments: Buffer;
   decodedArguments?: JsonValue;
   manual: boolean;
+  preAprove: boolean;
 }
 
 export type ArgsTypesOfCanister = { [key: string]: { [key: string]: any } };
@@ -41,7 +41,7 @@ export const canDecodeArgs = (
 export const getSignInfoFromTransaction = (
   transaction: Transaction,
   sender: string
-): SignInfo => ({
+): AssuredSignInfo => ({
   methodName: transaction.methodName,
   canisterId: transaction.canisterId,
   sender,
@@ -49,6 +49,7 @@ export const getSignInfoFromTransaction = (
   decodedArguments: transaction.args,
   manual: false,
   preAprove: false,
+  requestType: "unknown",
 });
 
 const decodeArgs = (signInfo: SignInfo, argsTypes: ArgsTypesOfCanister) => {
