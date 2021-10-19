@@ -1,5 +1,6 @@
 import { IDL, JsonValue } from "@dfinity/candid";
 import { Buffer } from "buffer/";
+import { recursiveParseBigint } from "./bigint";
 import getDomainMetadata from "./domain-metadata";
 
 export interface SignInfo {
@@ -33,25 +34,6 @@ export const canDecodeArgs = (
     signInfo?.methodName &&
     signInfo?.arguments &&
     argsTypes[signInfo.canisterId]?.[signInfo.methodName]
-  );
-};
-
-export const recursiveParseBigint = obj => {
-    if (!obj) return obj;
-    return Object.entries(obj).reduce(
-    (acum, [key, val]) => {
-      if (val instanceof Object) {
-        const res = Array.isArray(val)
-          ? val.map(el => recursiveParseBigint(el))
-          : recursiveParseBigint(val);
-        return { ...acum, [key]: res };
-      }
-      if (typeof val === 'bigint') {
-        return { ...acum, [key]: val.toString() };
-      }
-      return { ...acum, [key]: val };
-    },
-    { ...obj }
   );
 };
 
