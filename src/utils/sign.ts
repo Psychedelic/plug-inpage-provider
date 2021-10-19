@@ -36,6 +36,25 @@ export const canDecodeArgs = (
   );
 };
 
+export const recursiveParseBigint = obj => {
+    if (!obj) return obj;
+    return Object.entries(obj).reduce(
+    (acum, [key, val]) => {
+      if (val instanceof Object) {
+        const res = Array.isArray(val)
+          ? val.map(el => recursiveParseBigint(el))
+          : recursiveParseBigint(val);
+        return { ...acum, [key]: res };
+      }
+      if (typeof val === 'bigint') {
+        return { ...acum, [key]: val.toString() };
+      }
+      return { ...acum, [key]: val };
+    },
+    { ...obj }
+  );
+};
+
 const decodeArgs = (signInfo: SignInfo, argsTypes: ArgsTypesOfCanister) => {
   if (canDecodeArgs(signInfo, argsTypes)) {
     const assuredSignInfo = signInfo as AssuredSignInfo;
@@ -51,7 +70,7 @@ export const signFactory =
     const metadata = getDomainMetadata();
     const payloadArr = new Uint8Array(payload);
 
-    if (signInfo) signInfo.decodedArguments = decodeArgs(signInfo, argsTypes);
+    if (signInfo) signInfo.decodedArguments = recursiveParseBigint(decodeArgs(signInfo, argsTypes));
 
     const res = await clientRPC.call(
       "requestSign",

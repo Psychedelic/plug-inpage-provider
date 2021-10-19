@@ -47,7 +47,7 @@ interface CreateActor<T> {
 
 interface RequestConnectParams {
   whitelist: string[];
-  host: string;
+  host?: string;
 }
 
 interface RequestBurnXTCParams {
@@ -135,12 +135,14 @@ export default class Provider implements ProviderInterface {
     canisterId,
     interfaceFactory,
   }: CreateActor<T>): Promise<ActorSubclass<T>> {
-    if (!this.agent) throw Error("Oops! Agent initialization required.");
+    if (!this.agent) {
+      await this.createAgent({ whitelist: [canisterId] });
+    }
 
     this.idls[canisterId] = getArgTypes(interfaceFactory);
 
     return Actor.createActor(interfaceFactory, {
-      agent: this.agent,
+      agent: this.agent!,
       canisterId,
     });
   }
