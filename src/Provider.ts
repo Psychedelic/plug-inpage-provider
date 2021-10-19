@@ -81,6 +81,7 @@ export interface ProviderInterface {
   createAgent(params: CreateAgentParams): Promise<boolean>;
   requestBurnXTC(params: RequestBurnXTCParams): Promise<any>;
   versions: ProviderInterfaceVersions;
+  getPrincipal: () => Promise<Principal>;
 }
 
 export default class Provider implements ProviderInterface {
@@ -147,6 +148,11 @@ export default class Provider implements ProviderInterface {
     });
   }
 
+  // Todo: Add whole getPrincipal flow on main plug repo in case this has been deleted.
+  public async getPrincipal(): Promise<Principal> {
+    return this.principal;
+  }
+
   public async isConnected(): Promise<boolean> {
     const metadata = getDomainMetadata();
 
@@ -188,14 +194,17 @@ export default class Provider implements ProviderInterface {
       },
     });
 
-    if (!whitelist || !Array.isArray(whitelist) || !whitelist.length)
-      return response;
-
     const identity = new PlugIdentity(
       response,
       signFactory(this.clientRPC, this.idls),
       whitelist
     );
+
+    this.principal = identity.getPrincipal();
+
+    if (!whitelist || !Array.isArray(whitelist) || !whitelist.length)
+      return response;
+
 
     this.agent = new HttpAgent({
       identity,
