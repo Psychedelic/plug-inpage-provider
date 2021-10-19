@@ -47,7 +47,7 @@ interface CreateActor<T> {
 
 interface RequestConnectParams {
   whitelist: string[];
-  host: string;
+  host?: string;
 }
 
 interface RequestBurnXTCParams {
@@ -81,6 +81,7 @@ export interface ProviderInterface {
   createAgent(params: CreateAgentParams): Promise<boolean>;
   requestBurnXTC(params: RequestBurnXTCParams): Promise<any>;
   versions: ProviderInterfaceVersions;
+  getPrincipal: () => Promise<Principal>;
 }
 
 export default class Provider implements ProviderInterface {
@@ -135,14 +136,21 @@ export default class Provider implements ProviderInterface {
     canisterId,
     interfaceFactory,
   }: CreateActor<T>): Promise<ActorSubclass<T>> {
-    if (!this.agent) throw Error("Oops! Agent initialization required.");
+    if (!this.agent) {
+      await this.createAgent({ whitelist: [canisterId] });
+    }
 
     this.idls[canisterId] = getArgTypes(interfaceFactory);
 
     return Actor.createActor(interfaceFactory, {
-      agent: this.agent,
+      agent: this.agent!,
       canisterId,
     });
+  }
+
+  // Todo: Add whole getPrincipal flow on main plug repo in case this has been deleted.
+  public async getPrincipal(): Promise<Principal> {
+    return this.principal;
   }
 
   public async isConnected(): Promise<boolean> {
@@ -186,14 +194,17 @@ export default class Provider implements ProviderInterface {
       },
     });
 
-    if (!whitelist || !Array.isArray(whitelist) || !whitelist.length)
-      return response;
-
     const identity = new PlugIdentity(
       response,
       signFactory(this.clientRPC, this.idls),
       whitelist
     );
+
+    this.principal = identity.getPrincipal();
+
+    if (!whitelist || !Array.isArray(whitelist) || !whitelist.length)
+      return response;
+
 
     this.agent = new HttpAgent({
       identity,

@@ -1,5 +1,6 @@
 import { IDL, JsonValue } from "@dfinity/candid";
 import { Buffer } from "buffer/";
+import { recursiveParseBigint } from "./bigint";
 import getDomainMetadata from "./domain-metadata";
 
 export interface SignInfo {
@@ -51,7 +52,7 @@ export const signFactory =
     const metadata = getDomainMetadata();
     const payloadArr = new Uint8Array(payload);
 
-    if (signInfo) signInfo.decodedArguments = decodeArgs(signInfo, argsTypes);
+    if (signInfo) signInfo.decodedArguments = recursiveParseBigint(decodeArgs(signInfo, argsTypes));
 
     const res = await clientRPC.call(
       "requestSign",
