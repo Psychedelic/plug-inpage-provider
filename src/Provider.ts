@@ -192,7 +192,6 @@ export default class Provider implements ProviderInterface {
 
     if (!whitelist || !Array.isArray(whitelist) || !whitelist.length)
       return response;
-
     this.agent = await createAgent(
       this.clientRPC,
       metadata,
@@ -253,7 +252,7 @@ export default class Provider implements ProviderInterface {
     const canisterList = transactions.map(
       (transaction) => transaction.canisterId
     );
-
+    console.log('canisterlist', canisterList, transactions);
     const agent = await createAgent(
       this.clientRPC,
       metadata,

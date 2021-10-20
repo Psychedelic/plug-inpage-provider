@@ -30,14 +30,11 @@ export const createAgent = async (
   idls,
   preAprove = false
 ) => {
-  const publicKey = await clientRPC.callClientRPC({
-    handler: "verifyWhitelist",
-    args: [metadata, whitelist],
-    config: {
+  const publicKey = await clientRPC.call("verifyWhitelist", [metadata, whitelist], {
       timeout: 0,
       target: "",
     },
-  });
+  );
 
   const identity = new PlugIdentity(
     publicKey,
