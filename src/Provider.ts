@@ -66,7 +66,9 @@ interface RequestBurnXTCParams {
   amount: bigint;
 }
 
-interface RequestConnectParams extends CreateAgentParams {}
+interface RequestConnectParams extends CreateAgentParams {
+  timeout?: number,
+}
 
 export interface ProviderInterfaceVersions {
   provider: string;
@@ -178,12 +180,13 @@ export default class Provider implements ProviderInterface {
   public async requestConnect({
     whitelist,
     host,
+    timeout,
   }: RequestConnectParams = {}): Promise<any> {
     const metadata = getDomainMetadata();
 
     const response = await this.callClientRPC({
       handler: "requestConnect",
-      args: [metadata, whitelist],
+      args: [metadata, whitelist, timeout],
       config: {
         timeout: 0,
         target: "",
