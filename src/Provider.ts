@@ -61,6 +61,11 @@ interface CreateActor<T> {
   interfaceFactory: IDL.InterfaceFactory;
 }
 
+interface RequestConnectParams {
+  whitelist?: string[];
+  host?: string;
+}
+
 interface RequestBurnXTCParams {
   to: string;
   amount: bigint;
@@ -88,6 +93,7 @@ export interface ProviderInterface {
   createAgent(params: CreateAgentParams): Promise<boolean>;
   requestBurnXTC(params: RequestBurnXTCParams): Promise<any>;
   versions: ProviderInterfaceVersions;
+  getPrincipal: () => Promise<Principal>;
 }
 
 export default class Provider implements ProviderInterface {
@@ -142,11 +148,17 @@ export default class Provider implements ProviderInterface {
     canisterId,
     interfaceFactory,
   }: CreateActor<T>): Promise<ActorSubclass<T>> {
-    if (!this.agent) throw Error("Oops! Agent initialization required.");
-
+    const metadata = getDomainMetadata();
     this.idls[canisterId] = getArgTypes(interfaceFactory);
-
+    if (!this.agent) {
+      await createAgent(this.clientRPC, metadata, {  whitelist: [canisterId] }, this.idls);
+    }
     return createActor<T>(this.agent, canisterId, interfaceFactory);
+  }
+
+  // Todo: Add whole getPrincipal flow on main plug repo in case this has been deleted.
+  public async getPrincipal(): Promise<Principal> {
+    return this.principal;
   }
 
   public async isConnected(): Promise<boolean> {
@@ -181,7 +193,7 @@ export default class Provider implements ProviderInterface {
   }: RequestConnectParams = {}): Promise<any> {
     const metadata = getDomainMetadata();
 
-    const response = await this.callClientRPC({
+    const publicKey = await this.callClientRPC({
       handler: "requestConnect",
       args: [metadata, whitelist],
       config: {
@@ -191,13 +203,15 @@ export default class Provider implements ProviderInterface {
     });
 
     if (!whitelist || !Array.isArray(whitelist) || !whitelist.length)
-      return response;
+      return publicKey;
     this.agent = await createAgent(
       this.clientRPC,
       metadata,
       { whitelist, host },
       this.idls
     );
+
+    this.principal = await this.agent.getPrincipal();
 
     return !!this.agent;
   }
