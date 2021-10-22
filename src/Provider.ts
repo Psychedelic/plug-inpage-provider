@@ -300,9 +300,13 @@ export default class Provider implements ProviderInterface {
       const method = actor[transaction.methodName];
       try {
         const response = await method(...transaction.args);
-        await transaction.onSuccess(response);
+        if (transaction?.onSuccess) {
+          await transaction?.onSuccess(response);
+        }
       } catch (error) {
-        await transaction.onFail(error);
+        if (transaction?.onFail) {
+          await transaction.onFail(error);
+        }
       }
     }
 
