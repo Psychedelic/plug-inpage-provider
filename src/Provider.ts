@@ -266,7 +266,6 @@ export default class Provider implements ProviderInterface {
     const canisterList = transactions.map(
       (transaction) => transaction.canisterId
     );
-    console.log('canisterlist', canisterList, transactions);
     const agent = await createAgent(
       this.clientRPC,
       metadata,
@@ -283,7 +282,7 @@ export default class Provider implements ProviderInterface {
       getSignInfoFromTransaction(trx, sender)
     );
 
-    const signResponse = await this.callClientRPC({
+    const batchAccepted = await this.callClientRPC({
       handler: "batchTransactions",
       args: [metadata, signInfo],
       config: {
@@ -292,7 +291,7 @@ export default class Provider implements ProviderInterface {
       },
     });
 
-    if (!signResponse) return false;
+    if (!batchAccepted) return false;
 
     for (const transaction of transactions) {
       const actor = await createActor(
@@ -302,11 +301,10 @@ export default class Provider implements ProviderInterface {
       );
       const method = actor[transaction.methodName];
       try {
-        const response = method(...transaction.args);
-
-        transaction.onSuccess(response);
+        const response = await method(...transaction.args);
+        await transaction.onSuccess(response);
       } catch (error) {
-        transaction.onFail(error);
+        await transaction.onFail(error);
       }
     }
 
