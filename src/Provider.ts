@@ -213,7 +213,7 @@ export default class Provider implements ProviderInterface {
 
     this.principal = await this.agent.getPrincipal();
 
-    return !!this.agent;
+    return publicKey;
   }
 
   public async createAgent({
