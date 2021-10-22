@@ -9,16 +9,32 @@ import {
   managementCanisterPrincipal,
   transformOverrideHandler,
 } from "./utils/ic-management-api";
-import { PlugIdentity } from "./identity";
 import { versions } from "./constants";
-import { signFactory, getArgTypes, ArgsTypesOfCanister } from "./utils/sign";
+import {
+  getArgTypes,
+  ArgsTypesOfCanister,
+  getSignInfoFromTransaction,
+} from "./utils/sign";
+import { createActor, createAgent, CreateAgentParams } from "./utils/agent";
+
+export interface Transaction<
+  SuccessReturn = unknown,
+  FailReturn = unknown,
+  SuccessResponse = unknown,
+  FailResponse = unknown
+> {
+  idl: IDL.InterfaceFactory;
+  canisterId: string;
+  methodName: string;
+  args: any[];
+  onSuccess: (res: SuccessResponse) => Promise<SuccessReturn>;
+  onFail: (res: FailResponse) => Promise<FailReturn>;
+}
 
 export interface RequestConnectInput {
   canisters?: Principal[];
   timeout?: number;
 }
-
-export interface CreateAgentParams extends RequestConnectParams {}
 
 export interface TimeStamp {
   timestamp_nanos: bigint;
@@ -46,7 +62,7 @@ interface CreateActor<T> {
 }
 
 interface RequestConnectParams {
-  whitelist: string[];
+  whitelist?: string[];
   host?: string;
 }
 
@@ -55,12 +71,7 @@ interface RequestBurnXTCParams {
   amount: bigint;
 }
 
-const DEFAULT_HOST = "https://mainnet.dfinity.network";
-/* eslint-disable @typescript-eslint/no-unused-vars */
-const DEFAULT_REQUEST_CONNECT_ARGS: RequestConnectParams = {
-  whitelist: [],
-  host: DEFAULT_HOST,
-};
+interface RequestConnectParams extends CreateAgentParams {}
 
 export interface ProviderInterfaceVersions {
   provider: string;
@@ -70,6 +81,7 @@ export interface ProviderInterfaceVersions {
 export interface ProviderInterface {
   isConnected(): Promise<boolean>;
   disconnect(): Promise<void>;
+  batchTransactions(transactions: Transaction[]): Promise<boolean>;
   requestBalance(accountId?: number): Promise<bigint>;
   requestTransfer(params: RequestTransferParams): Promise<bigint>;
   requestConnect(params: RequestConnectParams): Promise<any>;
@@ -136,16 +148,12 @@ export default class Provider implements ProviderInterface {
     canisterId,
     interfaceFactory,
   }: CreateActor<T>): Promise<ActorSubclass<T>> {
-    if (!this.agent) {
-      await this.createAgent({ whitelist: [canisterId] });
-    }
-
+    const metadata = getDomainMetadata();
     this.idls[canisterId] = getArgTypes(interfaceFactory);
-
-    return Actor.createActor(interfaceFactory, {
-      agent: this.agent!,
-      canisterId,
-    });
+    if (!this.agent) {
+      await createAgent(this.clientRPC, metadata, {  whitelist: [canisterId] }, this.idls);
+    }
+    return createActor<T>(this.agent, canisterId, interfaceFactory);
   }
 
   // Todo: Add whole getPrincipal flow on main plug repo in case this has been deleted.
@@ -170,22 +178,22 @@ export default class Provider implements ProviderInterface {
     const metadata = getDomainMetadata();
 
     await this.callClientRPC({
-      handler: 'disconnect',
+      handler: "disconnect",
       args: [metadata.url],
       config: {
         timeout: 0,
         target: "",
-      }
+      },
     });
   }
 
   public async requestConnect({
-    whitelist = DEFAULT_REQUEST_CONNECT_ARGS.whitelist,
-    host = DEFAULT_REQUEST_CONNECT_ARGS.host,
-  }: RequestConnectParams = DEFAULT_REQUEST_CONNECT_ARGS): Promise<any> {
+    whitelist,
+    host,
+  }: RequestConnectParams = {}): Promise<any> {
     const metadata = getDomainMetadata();
 
-    const response = await this.callClientRPC({
+    const publicKey = await this.callClientRPC({
       handler: "requestConnect",
       args: [metadata, whitelist],
       config: {
@@ -194,51 +202,32 @@ export default class Provider implements ProviderInterface {
       },
     });
 
-    const identity = new PlugIdentity(
-      response,
-      signFactory(this.clientRPC, this.idls),
-      whitelist
+    if (!whitelist || !Array.isArray(whitelist) || !whitelist.length)
+      return publicKey;
+    this.agent = await createAgent(
+      this.clientRPC,
+      metadata,
+      { whitelist, host },
+      this.idls
     );
 
-    this.principal = identity.getPrincipal();
+    this.principal = await this.agent.getPrincipal();
 
-    if (!whitelist || !Array.isArray(whitelist) || !whitelist.length)
-      return response;
-
-
-    this.agent = new HttpAgent({
-      identity,
-      host,
-    });
-
-    return !!this.agent;
+    return publicKey;
   }
 
   public async createAgent({
-    whitelist = DEFAULT_REQUEST_CONNECT_ARGS.whitelist,
-    host = DEFAULT_REQUEST_CONNECT_ARGS.host,
-  }: CreateAgentParams = DEFAULT_REQUEST_CONNECT_ARGS): Promise<any> {
+    whitelist,
+    host,
+  }: CreateAgentParams = {}): Promise<any> {
     const metadata = getDomainMetadata();
 
-    const publicKey = await this.callClientRPC({
-      handler: "verifyWhitelist",
-      args: [metadata, whitelist],
-      config: {
-        timeout: 0,
-        target: "",
-      },
-    });
-
-    const identity = new PlugIdentity(
-      publicKey,
-      signFactory(this.clientRPC, this.idls),
-      whitelist
+    this.agent = await createAgent(
+      this.clientRPC,
+      metadata,
+      { whitelist, host },
+      this.idls
     );
-
-    this.agent = new HttpAgent({
-      identity,
-      host,
-    });
 
     return !!this.agent;
   }
@@ -267,6 +256,59 @@ export default class Provider implements ProviderInterface {
         target: "",
       },
     });
+  }
+
+  public async batchTransactions(
+    transactions: Transaction[]
+  ): Promise<boolean> {
+    const metadata = getDomainMetadata();
+
+    const canisterList = transactions.map(
+      (transaction) => transaction.canisterId
+    );
+    const agent = await createAgent(
+      this.clientRPC,
+      metadata,
+      {
+        whitelist: canisterList,
+      },
+      this.idls,
+      true
+    );
+
+    const sender = (await agent.getPrincipal()).toString();
+
+    const signInfo = transactions.map((trx) =>
+      getSignInfoFromTransaction(trx, sender)
+    );
+
+    const batchAccepted = await this.callClientRPC({
+      handler: "batchTransactions",
+      args: [metadata, signInfo],
+      config: {
+        timeout: 0,
+        target: "",
+      },
+    });
+
+    if (!batchAccepted) return false;
+
+    for (const transaction of transactions) {
+      const actor = await createActor(
+        agent,
+        transaction.canisterId,
+        transaction.idl
+      );
+      const method = actor[transaction.methodName];
+      try {
+        const response = await method(...transaction.args);
+        await transaction.onSuccess(response);
+      } catch (error) {
+        await transaction.onFail(error);
+      }
+    }
+
+    return true;
   }
 
   public async requestBurnXTC(params: RequestBurnXTCParams): Promise<any> {
