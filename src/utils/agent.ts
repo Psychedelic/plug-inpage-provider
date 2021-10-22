@@ -28,7 +28,7 @@ export const createAgent = async (
     host = DEFAULT_CREATE_AGENT_ARGS.host,
   }: CreateAgentParams,
   idls,
-  preAprove = false
+  preApprove = false
 ) => {
   const publicKey = await clientRPC.call("verifyWhitelist", [metadata, whitelist], {
       timeout: 0,
@@ -38,7 +38,7 @@ export const createAgent = async (
 
   const identity = new PlugIdentity(
     publicKey,
-    signFactory(clientRPC, idls, preAprove),
+    signFactory(clientRPC, idls, preApprove),
     whitelist
   );
 

@@ -1,6 +1,7 @@
 import { IDL, JsonValue } from "@dfinity/candid";
 import { Buffer } from "buffer/";
 import { Transaction } from "../Provider";
+import { recursiveParseBigint } from "./bigint";
 import getDomainMetadata from "./domain-metadata";
 
 export interface SignInfo {
@@ -21,7 +22,7 @@ export interface AssuredSignInfo {
   arguments: Buffer;
   decodedArguments?: JsonValue;
   manual: boolean;
-  preAprove: boolean;
+  preApprove: boolean;
 }
 
 export type ArgsTypesOfCanister = { [key: string]: { [key: string]: any } };
@@ -48,7 +49,7 @@ export const getSignInfoFromTransaction = (
   arguments: Buffer.from([]),
   decodedArguments: transaction.args,
   manual: false,
-  preAprove: false,
+  preApprove: false,
   requestType: "unknown",
 });
 
@@ -62,16 +63,16 @@ const decodeArgs = (signInfo: SignInfo, argsTypes: ArgsTypesOfCanister) => {
 };
 
 export const signFactory =
-  (clientRPC, argsTypes: ArgsTypesOfCanister, preAprove: boolean = false) =>
+  (clientRPC, argsTypes: ArgsTypesOfCanister, preApprove: boolean = false) =>
   async (payload: ArrayBuffer, signInfo?: SignInfo): Promise<ArrayBuffer> => {
     const metadata = getDomainMetadata();
     const payloadArr = new Uint8Array(payload);
 
-    if (signInfo) signInfo.decodedArguments = decodeArgs(signInfo, argsTypes);
+    if (signInfo) signInfo.decodedArguments = recursiveParseBigint(decodeArgs(signInfo, argsTypes));
 
     const res = await clientRPC.call(
       "requestSign",
-      [payloadArr, metadata, { ...signInfo, preAprove }],
+      [payloadArr, metadata, { ...signInfo, preApprove }],
       {
         timeout: 0,
         target: "",
