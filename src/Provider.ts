@@ -155,7 +155,19 @@ export default class Provider implements ProviderInterface {
 
   // Todo: Add whole getPrincipal flow on main plug repo in case this has been deleted.
   public async getPrincipal(): Promise<Principal> {
-    return this.principal;
+    const metadata = getDomainMetadata();
+    if (this.principal) {
+      return this.principal;
+    } else {
+      return await this.callClientRPC({
+        handler: "getPrincipal",
+        args: [metadata.url],
+        config: {
+          timeout: 0,
+          target: "",
+        },
+      });
+    }
   }
 
   public async isConnected(): Promise<boolean> {
@@ -187,7 +199,7 @@ export default class Provider implements ProviderInterface {
   public async requestConnect({
     whitelist,
     host,
-    timeout,
+    timeout = 120000,
   }: RequestConnectParams = {}): Promise<any> {
     const metadata = getDomainMetadata();
 
