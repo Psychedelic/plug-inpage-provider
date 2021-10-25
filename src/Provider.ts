@@ -16,6 +16,7 @@ import {
   getSignInfoFromTransaction,
 } from "./utils/sign";
 import { createActor, createAgent, CreateAgentParams } from "./utils/agent";
+import { recursiveParseBigint } from "./utils/bigint";
 
 export interface Transaction<
   SuccessReturn = unknown,
@@ -289,7 +290,7 @@ export default class Provider implements ProviderInterface {
     const sender = (await agent.getPrincipal()).toString();
 
     const signInfo = transactions.map((trx) =>
-      getSignInfoFromTransaction(trx, sender)
+    recursiveParseBigint(getSignInfoFromTransaction(trx, sender))
     );
 
     const batchAccepted = await this.callClientRPC({
