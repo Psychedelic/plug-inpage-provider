@@ -320,6 +320,7 @@ export default class Provider implements ProviderInterface {
         if (transaction?.onFail) {
           await transaction.onFail(error);
         }
+        break;
       }
     }
 
