@@ -61,17 +61,14 @@ interface CreateActor<T> {
   interfaceFactory: IDL.InterfaceFactory;
 }
 
-interface RequestConnectParams {
-  whitelist?: string[];
-  host?: string;
-}
-
 interface RequestBurnXTCParams {
   to: string;
   amount: bigint;
 }
 
-interface RequestConnectParams extends CreateAgentParams {}
+interface RequestConnectParams extends CreateAgentParams {
+  timeout?: number,
+}
 
 export interface ProviderInterfaceVersions {
   provider: string;
@@ -190,12 +187,13 @@ export default class Provider implements ProviderInterface {
   public async requestConnect({
     whitelist,
     host,
+    timeout,
   }: RequestConnectParams = {}): Promise<any> {
     const metadata = getDomainMetadata();
 
     const publicKey = await this.callClientRPC({
       handler: "requestConnect",
-      args: [metadata, whitelist],
+      args: [metadata, whitelist, timeout],
       config: {
         timeout: 0,
         target: "",
@@ -302,9 +300,13 @@ export default class Provider implements ProviderInterface {
       const method = actor[transaction.methodName];
       try {
         const response = await method(...transaction.args);
-        await transaction.onSuccess(response);
+        if (transaction?.onSuccess) {
+          await transaction?.onSuccess(response);
+        }
       } catch (error) {
-        await transaction.onFail(error);
+        if (transaction?.onFail) {
+          await transaction.onFail(error);
+        }
       }
     }
 
