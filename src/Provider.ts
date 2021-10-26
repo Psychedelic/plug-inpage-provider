@@ -197,11 +197,12 @@ export default class Provider implements ProviderInterface {
     });
   }
 
-  public async requestConnect({
-    whitelist,
-    host,
-    timeout = 120000,
-  }: RequestConnectParams = {}): Promise<any> {
+  public async requestConnect(args: RequestConnectParams = {}): Promise<any> {
+    const {
+      whitelist = [],
+      host,
+      timeout = 120000,
+    } = args;
     const metadata = getDomainMetadata();
 
     const publicKey = await this.callClientRPC({
