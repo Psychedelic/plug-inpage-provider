@@ -68,7 +68,7 @@ interface RequestBurnXTCParams {
 }
 
 interface RequestConnectParams extends CreateAgentParams {
-  timeout?: number,
+  timeout?: number;
 }
 
 export interface ProviderInterfaceVersions {
@@ -149,7 +149,12 @@ export default class Provider implements ProviderInterface {
     const metadata = getDomainMetadata();
     this.idls[canisterId] = getArgTypes(interfaceFactory);
     if (!this.agent) {
-      await createAgent(this.clientRPC, metadata, {  whitelist: [canisterId] }, this.idls);
+      await createAgent(
+        this.clientRPC,
+        metadata,
+        { whitelist: [canisterId] },
+        this.idls
+      );
     }
     return createActor<T>(this.agent, canisterId, interfaceFactory);
   }
@@ -160,7 +165,7 @@ export default class Provider implements ProviderInterface {
     if (this.principal) {
       return this.principal;
     } else {
-      return await this.callClientRPC({
+      const response = await this.callClientRPC({
         handler: "getPrincipal",
         args: [metadata.url],
         config: {
@@ -168,6 +173,12 @@ export default class Provider implements ProviderInterface {
           target: "",
         },
       });
+
+      if (response && typeof response === "string") {
+        return Principal.from(response);
+      }
+
+      return response;
     }
   }
 
@@ -198,11 +209,7 @@ export default class Provider implements ProviderInterface {
   }
 
   public async requestConnect(args: RequestConnectParams = {}): Promise<any> {
-    const {
-      whitelist = [],
-      host,
-      timeout = 120000,
-    } = args;
+    const { whitelist = [], host, timeout = 120000 } = args;
     const metadata = getDomainMetadata();
 
     const publicKey = await this.callClientRPC({
@@ -291,7 +298,7 @@ export default class Provider implements ProviderInterface {
     const sender = (await agent.getPrincipal()).toString();
 
     const signInfo = transactions.map((trx) =>
-    recursiveParseBigint(getSignInfoFromTransaction(trx, sender))
+      recursiveParseBigint(getSignInfoFromTransaction(trx, sender))
     );
 
     const batchAccepted = await this.callClientRPC({
