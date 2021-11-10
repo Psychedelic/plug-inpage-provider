@@ -11,7 +11,7 @@ import { Principal } from "@dfinity/principal";
 import { Secp256k1PublicKey } from '@dfinity/identity'
 import { Buffer } from "buffer/";
 import { SignInfo } from "./utils/sign";
-import { requestIdOf } from "./utils/request_id";
+import { concat, requestIdOf } from "./utils/request_id";
 import { fromArrayBufferToHex, fromHexToArrayBuffer, fromHexToUint8Array } from "./utils/buffer";
 
 type SignCb = (
@@ -80,14 +80,14 @@ export class PlugIdentity extends SignIdentity {
     ) {
       throw new Error(
         `Request failed:\n` +
-          `  Code: 401\n` +
-          `  Body: Plug Identity is not allowed to make requests to canister Id ${canister.toString()}`
+        `  Code: 401\n` +
+        `  Body: Plug Identity is not allowed to make requests to canister Id ${canister.toString()}`
       );
     }
 
     const requestId = await requestIdOf(body);
     const sender_sig = await this.sign(
-      Buffer.concat([domainSeparator, requestId]),
+      concat(domainSeparator, requestId),
       body
     );
 
