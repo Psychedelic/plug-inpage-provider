@@ -63,22 +63,20 @@ const decodeArgs = (signInfo: SignInfo, argsTypes: ArgsTypesOfCanister) => {
 };
 
 export const signFactory =
-  (clientRPC, argsTypes: ArgsTypesOfCanister, preApprove: boolean = false) =>
-  async (payload: ArrayBuffer, signInfo?: SignInfo): Promise<ArrayBuffer> => {
+  (clientRPC, argsTypes: ArgsTypesOfCanister, preAprove: boolean = false) =>
+  async (payload: string, signInfo?: SignInfo): Promise<string> => {
     const metadata = getDomainMetadata();
-    const payloadArr = new Uint8Array(payload);
-
     if (signInfo) signInfo.decodedArguments = recursiveParseBigint(decodeArgs(signInfo, argsTypes));
 
     const res = await clientRPC.call(
       "requestSign",
-      [payloadArr, metadata, { ...signInfo, preApprove }],
+      [payload, metadata, { ...signInfo, preAprove }],
       {
         timeout: 0,
         target: "",
       }
     );
-    return new Uint8Array(Object.values(res));
+    return res;
   };
 
 export const getArgTypes = (interfaceFactory: IDL.InterfaceFactory) => {
