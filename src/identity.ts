@@ -6,13 +6,14 @@ import {
   ReadRequest,
   CallRequest,
   Signature,
+  DerEncodedPublicKey,
 } from "@dfinity/agent";
 import { Principal } from "@dfinity/principal";
 import { Secp256k1PublicKey } from '@dfinity/identity'
 import { Buffer } from "buffer/";
 import { SignInfo } from "./utils/sign";
 import { concat, requestIdOf } from "./utils/request_id";
-import { fromArrayBufferToHex, fromHexToArrayBuffer, fromHexToUint8Array } from "./utils/buffer";
+import { fromArrayBufferToHex, fromHexToArrayBuffer } from "./utils/buffer";
 
 type SignCb = (
   payload: string,
@@ -26,12 +27,13 @@ export class PlugIdentity extends SignIdentity {
   private publicKey: PublicKey;
   private whitelist: string[];
   constructor(
-    hexPublicRawKey: string,
+    hexPublicDerKey: string,
     private signCb: SignCb,
     whitelist: string[]
   ) {
     super();
-    this.publicKey = Secp256k1PublicKey.fromRaw(fromHexToUint8Array(hexPublicRawKey));
+    const derKey = fromHexToArrayBuffer(hexPublicDerKey) as DerEncodedPublicKey
+    this.publicKey = Secp256k1PublicKey.fromDer(derKey);
     this.signCb = signCb;
     this.whitelist = whitelist || [];
   }
