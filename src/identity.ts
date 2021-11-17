@@ -5,35 +5,44 @@ import {
   ReadRequestType,
   ReadRequest,
   CallRequest,
-  Signature,
-  DerEncodedPublicKey,
 } from "@dfinity/agent";
+import { BinaryBlob, blobFromBuffer, DerEncodedBlob } from "@dfinity/candid";
 import { Principal } from "@dfinity/principal";
-import { Secp256k1PublicKey } from '@dfinity/identity'
 import { Buffer } from "buffer/";
 import { SignInfo } from "./utils/sign";
-import { concat, requestIdOf } from "./utils/request_id";
-import { fromArrayBufferToHex, fromHexToArrayBuffer } from "./utils/buffer";
+import { requestIdOf } from "./utils/request_id";
 
 type SignCb = (
-  payload: string,
+  payload: ArrayBuffer,
   signInfo?: SignInfo
-) => Promise<string>;
+) => Promise<ArrayBuffer>;
 
 type RequestType = ReadRequest | CallRequest;
 
 const domainSeparator = Buffer.from(new TextEncoder().encode("\x0Aic-request"));
+interface SerializedPublicKey {
+  rawKey: {
+    type: string;
+    data: Uint8Array;
+  };
+  derKey: {
+    type: string;
+    data: DerEncodedBlob;
+  };
+}
 export class PlugIdentity extends SignIdentity {
   private publicKey: PublicKey;
   private whitelist: string[];
   constructor(
-    hexPublicDerKey: string,
+    publicKey: SerializedPublicKey,
     private signCb: SignCb,
     whitelist: string[]
   ) {
     super();
-    const derKey = fromHexToArrayBuffer(hexPublicDerKey) as DerEncodedPublicKey
-    this.publicKey = Secp256k1PublicKey.fromDer(derKey);
+    this.publicKey = {
+      ...publicKey,
+      toDer: () => publicKey.derKey?.data ?? publicKey.derKey,
+    };
     this.signCb = signCb;
     this.whitelist = whitelist || [];
   }
@@ -42,8 +51,8 @@ export class PlugIdentity extends SignIdentity {
     return this.publicKey;
   }
 
-  async sign(blob: ArrayBuffer, signInfo?: RequestType): Promise<Signature> {
-    const res = await this.signCb(fromArrayBufferToHex(blob), {
+  async sign(blob: BinaryBlob, signInfo?: RequestType): Promise<BinaryBlob> {
+    const res = await this.signCb(blob, {
       sender: signInfo?.sender && Principal.from(signInfo.sender).toString(),
       methodName: signInfo?.method_name,
       requestType: signInfo?.request_type,
@@ -53,12 +62,12 @@ export class PlugIdentity extends SignIdentity {
       arguments: signInfo?.arg,
       manual: false,
     });
-    return fromHexToArrayBuffer(res) as Signature;
+    return res as BinaryBlob;
   }
 
   getPrincipal(): Principal {
     if (!this._principal) {
-      this._principal = Principal.selfAuthenticating(new Uint8Array(this.publicKey.toDer()));
+      this._principal = Principal.selfAuthenticating(this.publicKey.toDer());
     }
     return this._principal;
   }
@@ -82,14 +91,14 @@ export class PlugIdentity extends SignIdentity {
     ) {
       throw new Error(
         `Request failed:\n` +
-        `  Code: 401\n` +
-        `  Body: Plug Identity is not allowed to make requests to canister Id ${canister.toString()}`
+          `  Code: 401\n` +
+          `  Body: Plug Identity is not allowed to make requests to canister Id ${canister.toString()}`
       );
     }
 
     const requestId = await requestIdOf(body);
     const sender_sig = await this.sign(
-      concat(domainSeparator, requestId),
+      blobFromBuffer(Buffer.concat([domainSeparator, requestId])),
       body
     );
 
