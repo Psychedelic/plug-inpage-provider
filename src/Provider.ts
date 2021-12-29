@@ -19,9 +19,9 @@ import { createActor, createAgent, CreateAgentParams } from "./utils/agent";
 import { recursiveParseBigint } from "./utils/bigint";
 
 export interface Transaction<
-  SuccessReturn = unknown,
+  SuccessReturn = unknown[],
   FailReturn = unknown,
-  SuccessResponse = unknown,
+  SuccessResponse = unknown[],
   FailResponse = unknown
 > {
   idl: IDL.InterfaceFactory;
@@ -313,7 +313,7 @@ export default class Provider implements ProviderInterface {
     if (!batchAccepted) return false;
 
     let idx = 0;
-    let prevTxSuccessResponses: [number, unknown][] = [];
+    let prevTxsData: [number, unknown[]][] = [];
 
     for (const transaction of transactions) {
       const actor = await createActor(
@@ -323,8 +323,10 @@ export default class Provider implements ProviderInterface {
       );
       const method = actor[transaction.methodName];
       try {
-        const prevTxSuccessResponse =
-          prevTxSuccessResponses.find((resp) => resp[0] === idx - 1) ?? [];
+        const prevTxData =
+          prevTxsData.find((resp) => resp[0] === idx - 1) ?? [];
+
+        const prevTxSuccessResponse = prevTxData[1] ?? [];
 
         const response = await method(
           ...[...prevTxSuccessResponse, ...transaction.args]
@@ -333,10 +335,7 @@ export default class Provider implements ProviderInterface {
           const successResponse = await transaction?.onSuccess(response);
 
           if (successResponse) {
-            prevTxSuccessResponses = [
-              ...prevTxSuccessResponses,
-              [idx, successResponse],
-            ];
+            prevTxsData = [...prevTxsData, [idx, successResponse]];
           }
         }
       } catch (error) {
