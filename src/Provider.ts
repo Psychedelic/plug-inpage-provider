@@ -312,6 +312,9 @@ export default class Provider implements ProviderInterface {
 
     if (!batchAccepted) return false;
 
+    let idx = 0;
+    let prevTxSuccessResponses: [number, unknown][] = [];
+
     for (const transaction of transactions) {
       const actor = await createActor(
         agent,
@@ -320,9 +323,22 @@ export default class Provider implements ProviderInterface {
       );
       const method = actor[transaction.methodName];
       try {
-        const response = await method(...transaction.args);
+        const prevTxSuccessResponse = prevTxSuccessResponses.find(
+          (resp) => resp[0] === idx - 1
+        );
+
+        const response = await method(
+          ...(prevTxSuccessResponse ?? transaction.args)
+        );
         if (transaction?.onSuccess) {
-          await transaction?.onSuccess(response);
+          const successResponse = await transaction?.onSuccess(response);
+
+          if (successResponse) {
+            prevTxSuccessResponses = [
+              ...prevTxSuccessResponses,
+              [idx, successResponse],
+            ];
+          }
         }
       } catch (error) {
         if (transaction?.onFail) {
@@ -330,6 +346,7 @@ export default class Provider implements ProviderInterface {
         }
         break;
       }
+      idx++;
     }
 
     return true;
