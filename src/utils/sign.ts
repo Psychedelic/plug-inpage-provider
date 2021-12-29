@@ -42,16 +42,22 @@ export const canDecodeArgs = (
 export const getSignInfoFromTransaction = (
   transaction: Transaction,
   sender: string
-): AssuredSignInfo => ({
-  methodName: transaction.methodName,
-  canisterId: transaction.canisterId,
-  sender,
-  arguments: Buffer.from([]),
-  decodedArguments: transaction.args([]),
-  manual: false,
-  preApprove: false,
-  requestType: "unknown",
-});
+): AssuredSignInfo => {
+  const decodedArguments = Array.isArray(transaction.args)
+    ? transaction.args
+    : transaction.args([]);
+
+  return {
+    methodName: transaction.methodName,
+    canisterId: transaction.canisterId,
+    sender,
+    arguments: Buffer.from([]),
+    decodedArguments,
+    manual: false,
+    preApprove: false,
+    requestType: "unknown",
+  };
+};
 
 const decodeArgs = (signInfo: SignInfo, argsTypes: ArgsTypesOfCanister) => {
   if (canDecodeArgs(signInfo, argsTypes)) {
