@@ -18,18 +18,20 @@ import {
 import { createActor, createAgent, CreateAgentParams } from "./utils/agent";
 import { recursiveParseBigint } from "./utils/bigint";
 
+export interface TransactionArgOption {
+  isRequired: boolean;
+}
+
 export interface Transaction<
-  SuccessReturn = unknown[],
-  FailReturn = unknown,
   SuccessResponse = unknown[],
-  FailResponse = unknown
+  PrevSuccessResponse = unknown[]
 > {
   idl: IDL.InterfaceFactory;
   canisterId: string;
   methodName: string;
-  args: any[];
-  onSuccess: (res: SuccessResponse) => Promise<SuccessReturn>;
-  onFail: (res: FailResponse) => Promise<FailReturn>;
+  args: (res?: PrevSuccessResponse) => unknown[] | unknown[];
+  onSuccess: (res: PrevSuccessResponse) => Promise<SuccessResponse>;
+  onFail: (err: any) => Promise<void>;
 }
 
 export interface RequestConnectInput {
@@ -312,8 +314,8 @@ export default class Provider implements ProviderInterface {
 
     if (!batchAccepted) return false;
 
-    let idx = 0;
-    let prevTxsData: [number, unknown[]][] = [];
+    let transactionIndex = 0;
+    let prevTxsResponse: { transactionIndex: number; response: unknown }[] = [];
 
     for (const transaction of transactions) {
       const actor = await createActor(
@@ -323,19 +325,33 @@ export default class Provider implements ProviderInterface {
       );
       const method = actor[transaction.methodName];
       try {
-        const prevTxData =
-          prevTxsData.find((resp) => resp[0] === idx - 1) ?? [];
+        let response: any;
 
-        const prevTxSuccessResponse = prevTxData[1] ?? [];
+        if (typeof transaction.args === "function") {
+          if (prevTxsResponse) {
+            response = await method(...transaction.args(prevTxsResponse));
+          }
 
-        const response = await method(
-          ...[...prevTxSuccessResponse, ...transaction.args]
-        );
+          if (!prevTxsResponse) {
+            response = await method(...transaction.args());
+          }
+        } else if (Array.isArray(transaction.args)) {
+          response = await method(...(transaction.args as unknown[]));
+        } else {
+          await transaction?.onFail(
+            "Invalid transaction arguments, must be function or array"
+          );
+          break;
+        }
+
         if (transaction?.onSuccess) {
-          const successResponse = await transaction?.onSuccess(response);
+          const chainedResponse = await transaction?.onSuccess(response);
 
-          if (successResponse) {
-            prevTxsData = [...prevTxsData, [idx, successResponse]];
+          if (chainedResponse) {
+            prevTxsResponse = [
+              ...prevTxsResponse,
+              { transactionIndex, response: chainedResponse },
+            ];
           }
         }
       } catch (error) {
@@ -344,7 +360,7 @@ export default class Provider implements ProviderInterface {
         }
         break;
       }
-      idx++;
+      transactionIndex++;
     }
 
     return true;
