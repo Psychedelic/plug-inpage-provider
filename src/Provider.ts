@@ -323,12 +323,11 @@ export default class Provider implements ProviderInterface {
       );
       const method = actor[transaction.methodName];
       try {
-        const prevTxSuccessResponse = prevTxSuccessResponses.find(
-          (resp) => resp[0] === idx - 1
-        );
+        const prevTxSuccessResponse =
+          prevTxSuccessResponses.find((resp) => resp[0] === idx - 1) ?? [];
 
         const response = await method(
-          ...(prevTxSuccessResponse ?? transaction.args)
+          ...[...prevTxSuccessResponse, ...transaction.args]
         );
         if (transaction?.onSuccess) {
           const successResponse = await transaction?.onSuccess(response);
