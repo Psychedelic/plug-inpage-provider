@@ -27,9 +27,7 @@ export interface Transaction<SuccessResponse = unknown[]> {
   idl: IDL.InterfaceFactory;
   canisterId: string;
   methodName: string;
-  args: (
-    responses?: TransactionPrevSuccessResponses[]
-  ) => unknown[] | unknown[];
+  args: (responses?: TransactionPrevSuccessResponses[]) => any[] | any[];
   onSuccess: (res: SuccessResponse) => Promise<any>;
   onFail: (err: any) => Promise<void>;
 }

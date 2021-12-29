@@ -47,7 +47,7 @@ export const getSignInfoFromTransaction = (
   canisterId: transaction.canisterId,
   sender,
   arguments: Buffer.from([]),
-  decodedArguments: transaction.args,
+  decodedArguments: transaction.args([]),
   manual: false,
   preApprove: false,
   requestType: "unknown",
@@ -68,7 +68,10 @@ export const signFactory =
     const metadata = getDomainMetadata();
     const payloadArr = new Uint8Array(payload);
 
-    if (signInfo) signInfo.decodedArguments = recursiveParseBigint(decodeArgs(signInfo, argsTypes));
+    if (signInfo)
+      signInfo.decodedArguments = recursiveParseBigint(
+        decodeArgs(signInfo, argsTypes)
+      );
 
     const res = await clientRPC.call(
       "requestSign",
