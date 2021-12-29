@@ -18,19 +18,19 @@ import {
 import { createActor, createAgent, CreateAgentParams } from "./utils/agent";
 import { recursiveParseBigint } from "./utils/bigint";
 
-export interface TransactionArgOption {
-  isRequired: boolean;
+export interface TransactionPrevSuccessResponses {
+  transactionIndex: number;
+  response: any;
 }
 
-export interface Transaction<
-  SuccessResponse = unknown[],
-  PrevSuccessResponse = unknown[]
-> {
+export interface Transaction<SuccessResponse = unknown[]> {
   idl: IDL.InterfaceFactory;
   canisterId: string;
   methodName: string;
-  args: (res?: PrevSuccessResponse) => unknown[] | unknown[];
-  onSuccess: (res: PrevSuccessResponse) => Promise<SuccessResponse>;
+  args: (
+    responses?: TransactionPrevSuccessResponses[]
+  ) => unknown[] | unknown[];
+  onSuccess: (res: SuccessResponse) => Promise<any>;
   onFail: (err: any) => Promise<void>;
 }
 
