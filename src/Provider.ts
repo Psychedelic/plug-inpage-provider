@@ -18,7 +18,7 @@ import {
 import { createActor, createAgent, CreateAgentParams } from "./utils/agent";
 import { recursiveParseBigint } from "./utils/bigint";
 
-export interface TransactionPrevSuccessResponses {
+export interface TransactionPrevResponse {
   transactionIndex: number;
   response: any;
 }
@@ -27,7 +27,7 @@ export interface Transaction<SuccessResponse = unknown[]> {
   idl: IDL.InterfaceFactory;
   canisterId: string;
   methodName: string;
-  args: (responses?: TransactionPrevSuccessResponses[]) => any[] | any[];
+  args: (responses?: TransactionPrevResponse[]) => any[] | any[];
   onSuccess: (res: SuccessResponse) => Promise<any>;
   onFail: (err: any) => Promise<void>;
 }
@@ -313,7 +313,7 @@ export default class Provider implements ProviderInterface {
     if (!batchAccepted) return false;
 
     let transactionIndex = 0;
-    let prevTxsResponse: { transactionIndex: number; response: unknown }[] = [];
+    let prevTransactionsData: TransactionPrevResponse[] = [];
 
     for (const transaction of transactions) {
       const actor = await createActor(
@@ -326,11 +326,11 @@ export default class Provider implements ProviderInterface {
         let response: any;
 
         if (typeof transaction.args === "function") {
-          if (prevTxsResponse) {
-            response = await method(...transaction.args(prevTxsResponse));
+          if (prevTransactionsData) {
+            response = await method(...transaction.args(prevTransactionsData));
           }
 
-          if (!prevTxsResponse) {
+          if (!prevTransactionsData) {
             response = await method(...transaction.args());
           }
         } else if (Array.isArray(transaction.args)) {
@@ -346,8 +346,8 @@ export default class Provider implements ProviderInterface {
           const chainedResponse = await transaction?.onSuccess(response);
 
           if (chainedResponse) {
-            prevTxsResponse = [
-              ...prevTxsResponse,
+            prevTransactionsData = [
+              ...prevTransactionsData,
               { transactionIndex, response: chainedResponse },
             ];
           }
