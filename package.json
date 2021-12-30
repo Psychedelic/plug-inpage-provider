@@ -1,6 +1,6 @@
 {
   "name": "@psychedelic/plug-inpage-provider",
-  "version": "1.5.0-comp",
+  "version": "1.6.0",
   "main": "dist/src/index.js",
   "module": "dist/esm/src/index.js",
   "jsnext:main": "dist/esm/src/index.js",
@@ -28,11 +28,11 @@
     "package",
     "typescript"
   ],
-  "author": "Guillermo Puente <guillermo@fleek.co>",
+  "author": "Psychedelic",
   "bugs": {
-    "url": "https://github.com/FleekHQ/plug-inpage-provider/issues"
+    "url": "https://github.com/Psychedelic/plug-inpage-provider/issues"
   },
-  "homepage": "https://github.com/FleekHQ/plug-inpage-provider#readme",
+  "homepage": "https://github.com/Psychedelic/plug-inpage-provider#readme",
   "devDependencies": {
     "@babel/core": "^7.13.16",
     "@types/jest": "^26.0.22",
