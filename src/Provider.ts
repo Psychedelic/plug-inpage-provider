@@ -315,7 +315,7 @@ export default class Provider implements ProviderInterface {
     let transactionIndex = 0;
     let prevTransactionsData: TransactionPrevResponse[] = [];
 
-    for (const transaction of transactions) {
+    for await (const transaction of transactions) {
       const actor = await createActor(
         agent,
         transaction.canisterId,
@@ -344,7 +344,6 @@ export default class Provider implements ProviderInterface {
 
         if (transaction?.onSuccess) {
           const chainedResponse = await transaction?.onSuccess(response);
-
           if (chainedResponse) {
             prevTransactionsData = [
               ...prevTransactionsData,
