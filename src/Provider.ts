@@ -18,18 +18,18 @@ import {
 import { createActor, createAgent, CreateAgentParams } from "./utils/agent";
 import { recursiveParseBigint } from "./utils/bigint";
 
-export interface Transaction<
-  SuccessReturn = unknown,
-  FailReturn = unknown,
-  SuccessResponse = unknown,
-  FailResponse = unknown
-> {
+export interface TransactionPrevResponse {
+  transactionIndex: number;
+  response: any;
+}
+
+export interface Transaction<SuccessResponse = unknown[]> {
   idl: IDL.InterfaceFactory;
   canisterId: string;
   methodName: string;
-  args: any[];
-  onSuccess: (res: SuccessResponse) => Promise<SuccessReturn>;
-  onFail: (res: FailResponse) => Promise<FailReturn>;
+  args: (responses?: TransactionPrevResponse[]) => any[] | any[];
+  onSuccess: (res: SuccessResponse) => Promise<any>;
+  onFail: (err: any) => Promise<void>;
 }
 
 export interface RequestConnectInput {
@@ -312,7 +312,10 @@ export default class Provider implements ProviderInterface {
 
     if (!batchAccepted) return false;
 
-    for (const transaction of transactions) {
+    let transactionIndex = 0;
+    let prevTransactionsData: TransactionPrevResponse[] = [];
+
+    for await (const transaction of transactions) {
       const actor = await createActor(
         agent,
         transaction.canisterId,
@@ -320,9 +323,33 @@ export default class Provider implements ProviderInterface {
       );
       const method = actor[transaction.methodName];
       try {
-        const response = await method(...transaction.args);
+        let response: any;
+
+        if (typeof transaction.args === "function") {
+          if (prevTransactionsData) {
+            response = await method(...transaction.args(prevTransactionsData));
+          }
+
+          if (!prevTransactionsData) {
+            response = await method(...transaction.args());
+          }
+        } else if (Array.isArray(transaction.args)) {
+          response = await method(...(transaction.args as unknown[]));
+        } else {
+          await transaction?.onFail(
+            "Invalid transaction arguments, must be function or array"
+          );
+          break;
+        }
+
         if (transaction?.onSuccess) {
-          await transaction?.onSuccess(response);
+          const chainedResponse = await transaction?.onSuccess(response);
+          if (chainedResponse) {
+            prevTransactionsData = [
+              ...prevTransactionsData,
+              { transactionIndex, response: chainedResponse },
+            ];
+          }
         }
       } catch (error) {
         if (transaction?.onFail) {
@@ -330,6 +357,7 @@ export default class Provider implements ProviderInterface {
         }
         break;
       }
+      transactionIndex++;
     }
 
     return true;

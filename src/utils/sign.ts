@@ -42,16 +42,22 @@ export const canDecodeArgs = (
 export const getSignInfoFromTransaction = (
   transaction: Transaction,
   sender: string
-): AssuredSignInfo => ({
-  methodName: transaction.methodName,
-  canisterId: transaction.canisterId,
-  sender,
-  arguments: Buffer.from([]),
-  decodedArguments: transaction.args,
-  manual: false,
-  preApprove: false,
-  requestType: "unknown",
-});
+): AssuredSignInfo => {
+  const decodedArguments = Array.isArray(transaction.args)
+    ? transaction.args
+    : transaction.args([]);
+
+  return {
+    methodName: transaction.methodName,
+    canisterId: transaction.canisterId,
+    sender,
+    arguments: Buffer.from([]),
+    decodedArguments,
+    manual: false,
+    preApprove: false,
+    requestType: "unknown",
+  };
+};
 
 const decodeArgs = (signInfo: SignInfo, argsTypes: ArgsTypesOfCanister) => {
   if (canDecodeArgs(signInfo, argsTypes)) {
@@ -68,7 +74,10 @@ export const signFactory =
     const metadata = getDomainMetadata();
     const payloadArr = new Uint8Array(payload);
 
-    if (signInfo) signInfo.decodedArguments = recursiveParseBigint(decodeArgs(signInfo, argsTypes));
+    if (signInfo)
+      signInfo.decodedArguments = recursiveParseBigint(
+        decodeArgs(signInfo, argsTypes)
+      );
 
     const res = await clientRPC.call(
       "requestSign",
