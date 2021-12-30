@@ -29,7 +29,7 @@ export interface Transaction<SuccessResponse = unknown[]> {
   methodName: string;
   args: (responses?: TransactionPrevResponse[]) => any[] | any[];
   onSuccess: (res: SuccessResponse) => Promise<any>;
-  onFail: (err: any) => Promise<void>;
+  onFail: (err: any, responses?: TransactionPrevResponse[]) => Promise<void>;
 }
 
 export interface RequestConnectInput {
@@ -337,7 +337,8 @@ export default class Provider implements ProviderInterface {
           response = await method(...(transaction.args as unknown[]));
         } else {
           await transaction?.onFail(
-            "Invalid transaction arguments, must be function or array"
+            "Invalid transaction arguments, must be function or array",
+            prevTransactionsData
           );
           break;
         }
@@ -353,7 +354,7 @@ export default class Provider implements ProviderInterface {
         }
       } catch (error) {
         if (transaction?.onFail) {
-          await transaction.onFail(error);
+          await transaction.onFail(error, prevTransactionsData);
         }
         break;
       }
