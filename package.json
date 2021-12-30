@@ -28,11 +28,11 @@
     "package",
     "typescript"
   ],
-  "author": "Guillermo Puente <guillermo@fleek.co>",
+  "author": "Psychedelic",
   "bugs": {
-    "url": "https://github.com/FleekHQ/plug-inpage-provider/issues"
+    "url": "https://github.com/Psychedelic/plug-inpage-provider/issues"
   },
-  "homepage": "https://github.com/FleekHQ/plug-inpage-provider#readme",
+  "homepage": "https://github.com/Psychedelic/plug-inpage-provider#readme",
   "devDependencies": {
     "@babel/core": "^7.13.16",
     "@types/jest": "^26.0.22",
