@@ -42,10 +42,14 @@ export const createAgent = async (
     whitelist
   );
 
-  return new HttpAgent({
+  const agent = new HttpAgent({
     identity,
     host,
   });
+  if (host !== DEFAULT_CREATE_AGENT_ARGS.host) {
+    await agent.fetchRootKey();
+  }
+  return agent;
 };
 
 export const createActor = async <T>(
