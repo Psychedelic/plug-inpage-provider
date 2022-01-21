@@ -76,11 +76,44 @@ export interface ProviderInterfaceVersions {
   extension: string;
 }
 
+export interface NFTCollection {
+  name: string;
+  canisterId: string;
+  standard: string;
+  tokens: NFTDetails[];
+  icon?: string;
+  description?: string;
+}
+export interface NFTDetails {
+  index: bigint;
+  canister: string;
+  id?: string;
+  name?: string;
+  url: string;
+  metadata: any;
+  standard: string;
+  collection?: string;
+}
+
+
+export interface WalletTransaction {
+  hash: string;
+  timestamp: bigint;
+  type: string;
+  details?: { [key: string]: any };
+  caller: string;
+}
+
+export interface RequestActivityResponse {
+  total: number;
+  transactions: WalletTransaction[];
+}
+
 export interface ProviderInterface {
   isConnected(): Promise<boolean>;
   disconnect(): Promise<void>;
   batchTransactions(transactions: Transaction[]): Promise<boolean>;
-  requestBalance(accountId?: number): Promise<bigint>;
+  requestBalance(accountIndex?: number): Promise<bigint>;
   requestTransfer(params: RequestTransferParams): Promise<bigint>;
   requestConnect(params: RequestConnectParams): Promise<any>;
   createActor<T>({
@@ -92,6 +125,8 @@ export interface ProviderInterface {
   requestBurnXTC(params: RequestBurnXTCParams): Promise<any>;
   versions: ProviderInterfaceVersions;
   getPrincipal: () => Promise<Principal>;
+  requestNFTs: () => Promise<NFTCollection[]>;
+  requestActivity: () => Promise<RequestActivityResponse>;
 }
 
 export default class Provider implements ProviderInterface {
@@ -251,12 +286,38 @@ export default class Provider implements ProviderInterface {
     return !!this.agent;
   }
 
-  public async requestBalance(accountId): Promise<bigint> {
+  public async requestBalance(accountIndex): Promise<bigint> {
     const metadata = getDomainMetadata();
 
     return await this.callClientRPC({
       handler: "requestBalance",
-      args: [metadata, accountId],
+      args: [metadata, accountIndex],
+      config: {
+        timeout: 0,
+        target: "",
+      },
+    });
+  }
+
+  public async requestNFTs(): Promise<NFTCollection[]> {
+    const metadata = getDomainMetadata();
+
+    return await this.callClientRPC({
+      handler: "requestNFTs",
+      args: [metadata],
+      config: {
+        timeout: 0,
+        target: "",
+      },
+    });
+  }
+
+  public async requestActivity(): Promise<RequestActivityResponse> {
+    const metadata = getDomainMetadata();
+
+    return await this.callClientRPC({
+      handler: "requestActivity",
+      args: [metadata],
       config: {
         timeout: 0,
         target: "",
