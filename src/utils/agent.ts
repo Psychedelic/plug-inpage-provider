@@ -1,4 +1,5 @@
 import { HttpAgent, Actor, ActorSubclass } from "@dfinity/agent";
+import { IC_MAINNET_URLS } from "../constants";
 
 import { PlugIdentity } from "../identity";
 import { signFactory } from "./sign";
@@ -13,7 +14,7 @@ interface CreateAgentParamsFixed {
   host: string;
 }
 
-const DEFAULT_HOST = "https://mainnet.dfinity.network";
+const DEFAULT_HOST = IC_MAINNET_URLS[0];
 /* eslint-disable @typescript-eslint/no-unused-vars */
 const DEFAULT_CREATE_AGENT_ARGS: CreateAgentParamsFixed = {
   whitelist: [],
@@ -42,10 +43,14 @@ export const createAgent = async (
     whitelist
   );
 
-  return new HttpAgent({
+  const agent = new HttpAgent({
     identity,
     host,
   });
+  if (!IC_MAINNET_URLS.includes(host)) {
+    await agent.fetchRootKey();
+  }
+  return agent;
 };
 
 export const createActor = async <T>(
