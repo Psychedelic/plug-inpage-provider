@@ -251,7 +251,7 @@ export default class Provider implements ProviderInterface {
     return !!this.agent;
   }
 
-  public async requestBalance(accountId = 0): Promise<bigint> {
+  public async requestBalance(accountId): Promise<bigint> {
     const metadata = getDomainMetadata();
 
     return await this.callClientRPC({
