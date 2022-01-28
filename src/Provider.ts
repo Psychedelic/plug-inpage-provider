@@ -80,7 +80,7 @@ export interface ProviderInterface {
   isConnected(): Promise<boolean>;
   disconnect(): Promise<void>;
   batchTransactions(transactions: Transaction[]): Promise<boolean>;
-  requestBalance(accountId?: number): Promise<bigint>;
+  requestBalance(accountId?: number | null): Promise<bigint>;
   requestTransfer(params: RequestTransferParams): Promise<bigint>;
   requestConnect(params: RequestConnectParams): Promise<any>;
   createActor<T>({
@@ -251,7 +251,7 @@ export default class Provider implements ProviderInterface {
     return !!this.agent;
   }
 
-  public async requestBalance(accountId): Promise<bigint> {
+  public async requestBalance(accountId = null): Promise<bigint> {
     const metadata = getDomainMetadata();
 
     return await this.callClientRPC({
