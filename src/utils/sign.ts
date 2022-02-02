@@ -75,9 +75,9 @@ export const signFactory =
     const payloadArr = new Uint8Array(payload);
 
     if (signInfo)
-      signInfo.decodedArguments = recursiveParseBigint(
+      signInfo.decodedArguments = signInfo.arguments ? recursiveParseBigint(
         decodeArgs(signInfo, argsTypes)
-      );
+      ) : [];
 
     const res = await clientRPC.call(
       "requestSign",
