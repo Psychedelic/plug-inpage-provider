@@ -35,6 +35,29 @@ export default class Provider implements ProviderInterface {
     this.versions = versions;
   }
 
+  public async init() {
+    const metadata = getDomainMetadata();
+    const isConnected = await this.callClientRPC({
+      handler: "isConnected",
+      args: [metadata.url],
+      config: {
+        timeout: 0,
+        target: "",
+      },
+    });
+    if (isConnected) {
+      this.agent = await createAgent(
+        this.clientRPC,
+        metadata,
+        { whitelist: [] },
+        this.idls
+      );
+      const principal = await this.agent.getPrincipal();
+      this.principal = principal.toString();
+      this.accountId = await getAccountId(principal);
+    }
+  }
+
   private async callClientRPC({ handler, args, config }): Promise<any> {
     const metadata = getDomainMetadata();
 
