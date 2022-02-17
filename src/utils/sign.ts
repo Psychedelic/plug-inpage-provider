@@ -1,6 +1,6 @@
 import { IDL, JsonValue } from "@dfinity/candid";
 import { Buffer } from "buffer/";
-import { Transaction } from "../Provider";
+import { Transaction } from "../Provider/interfaces";
 import { recursiveParseBigint } from "./bigint";
 import getDomainMetadata from "./domain-metadata";
 
