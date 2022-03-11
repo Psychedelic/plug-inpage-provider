@@ -1,5 +1,5 @@
 import BrowserRPC from "@fleekhq/browser-rpc/dist/BrowserRPC";
-import { Agent, Actor, ActorSubclass } from "@dfinity/agent";
+import { Agent, Actor, ActorSubclass, PublicKey } from "@dfinity/agent";
 import { Principal } from "@dfinity/principal";
 
 import getDomainMetadata from "../utils/domain-metadata";
@@ -14,7 +14,7 @@ import {
   ArgsTypesOfCanister,
   getSignInfoFromTransaction,
 } from "../utils/sign";
-import { createActor, createAgent, CreateAgentParams } from "../utils/agent";
+import { createActor, createAgent, CreateAgentParams, privateCreateAgent } from "../utils/agent";
 import { recursiveParseBigint } from "../utils/bigint";
 import { CreateActor, ProviderInterface, ProviderInterfaceVersions, RequestBurnXTCParams, RequestConnectParams, RequestTransferParams, Transaction, TransactionPrevResponse } from "./interfaces";
 import { getAccountId } from "../utils/account";
@@ -98,7 +98,7 @@ export default class Provider implements ProviderInterface {
     const metadata = getDomainMetadata();
     this.idls[canisterId] = getArgTypes(interfaceFactory);
     if (!this.agent) {
-      await createAgent(
+      this.agent = await createAgent(
         this.clientRPC,
         metadata,
         { whitelist: [canisterId] },
@@ -199,6 +199,20 @@ export default class Provider implements ProviderInterface {
 
     return !!this.agent;
   }
+
+  public async changeCurrentWallet({ publicKey, connectionParams }: { publicKey: PublicKey, connectionParams: RequestConnectParams }): Promise<any> {
+    // Validate public key? How do I prevent a user from calling this without triggering some weird back and forth flow? 
+    this.agent = await privateCreateAgent({
+      ...connectionParams,
+      clientRPC: this.clientRPC,
+      idls: this.idls,
+      publicKey,
+    });
+    const principal = await this.agent.getPrincipal();
+    this.principal = principal.toString();
+    this.accountId = await getAccountId(principal);
+  }
+
 
   public async requestBalance(accountId = null): Promise<bigint> {
     const metadata = getDomainMetadata();
