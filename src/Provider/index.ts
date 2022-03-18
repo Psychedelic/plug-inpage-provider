@@ -103,7 +103,7 @@ export default class Provider implements ProviderInterface {
     canisterId,
     interfaceFactory,
   }: CreateActor<T>): Promise<ActorSubclass<T>> {
-    if (!canisterId && validateCanisterId(canisterId))
+    if (!canisterId || !validateCanisterId(canisterId))
       throw Error("a canisterId valid is a required argument");
     if (!interfaceFactory)
       throw Error("interfaceFactory is a required argument");
