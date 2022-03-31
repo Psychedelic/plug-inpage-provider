@@ -98,7 +98,7 @@ export default class Provider implements ProviderInterface {
     const metadata = getDomainMetadata();
     this.idls[canisterId] = getArgTypes(interfaceFactory);
     if (!this.agent) {
-      await createAgent(
+      this.agent = await createAgent(
         this.clientRPC,
         metadata,
         { whitelist: [canisterId] },
