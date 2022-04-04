@@ -79,14 +79,10 @@ export const signFactory =
         decodeArgs(signInfo, argsTypes)
       ) : [];
 
-    const res = await clientRPC.call(
-      "requestSign",
-      [payloadArr, metadata, { ...signInfo, preApprove }],
-      {
-        timeout: 0,
-        target: "",
-      }
-    );
+    const res = await clientRPC.call({
+      handler: "requestSign",
+      args: [payloadArr, metadata, { ...signInfo, preApprove }],
+    });
     return new Uint8Array(Object.values(res));
   };
 
