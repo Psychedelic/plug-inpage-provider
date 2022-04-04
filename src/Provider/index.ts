@@ -28,6 +28,7 @@ import {
 } from "./interfaces";
 import RPCManager from "../modules/RPCManager";
 import SessionManager from "../modules/SessionManager";
+import { validateCanisterId } from "../utils/account";
 
 
 export default class Provider implements ProviderInterface {
@@ -59,6 +60,10 @@ export default class Provider implements ProviderInterface {
     canisterId,
     interfaceFactory,
   }: CreateActor<T>): Promise<ActorSubclass<T>> {
+    if (!canisterId || !validateCanisterId(canisterId))
+      throw Error("a canisterId valid is a required argument");
+    if (!interfaceFactory)
+      throw Error("interfaceFactory is a required argument");
     const metadata = getDomainMetadata();
     this.idls[canisterId] = getArgTypes(interfaceFactory);
     if (!this.agent) {
@@ -73,7 +78,9 @@ export default class Provider implements ProviderInterface {
   }
 
   // Todo: Add whole getPrincipal flow on main plug repo in case this has been deleted.
-  public async getPrincipal({ asString } = { asString: false }): Promise<Principal | string> {
+  public async getPrincipal(
+    { asString } = { asString: false }
+  ): Promise<Principal | string> {
     const metadata = getDomainMetadata();
     const principal = this.principalId;
     if (principal) {
@@ -129,11 +136,11 @@ export default class Provider implements ProviderInterface {
       handler: "requestBalance",
       args: [metadata, accountId],
     });
-    return balances.map(balance => {
+    return balances.map((balance) => {
       // eslint-disable-next-line @typescript-eslint/no-unused-vars
       const { value, ...rest } = balance;
       return rest;
-    })
+    });
   }
 
   public async requestTransfer(params: RequestTransferParams): Promise<bigint> {
