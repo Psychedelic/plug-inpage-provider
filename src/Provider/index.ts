@@ -16,85 +16,54 @@ import {
 } from "../utils/sign";
 import { createActor, createAgent, CreateAgentParams } from "../utils/agent";
 import { recursiveParseBigint } from "../utils/bigint";
-import { CreateActor, ProviderInterface, ProviderInterfaceVersions, RequestBurnXTCParams, RequestConnectParams, RequestTransferParams, Transaction, TransactionPrevResponse } from "./interfaces";
-import { getAccountId } from "../utils/account";
+import { 
+  CreateActor,
+  ProviderInterface,
+  ProviderInterfaceVersions,
+  RequestBurnXTCParams,
+  RequestConnectParams,
+  RequestTransferParams,
+  Transaction,
+  TransactionPrevResponse
+} from "./interfaces";
+import RPCManager from "../modules/RPCManager";
+import SessionManager from "../modules/SessionManager";
+import { validateCanisterId } from "../utils/account";
 
 
 export default class Provider implements ProviderInterface {
   public agent?: Agent;
   public versions: ProviderInterfaceVersions;
   // @ts-ignore
-  public principal: string;
+  public principalId?: string;
   public accountId?: string;
-  private clientRPC: BrowserRPC;
+  private clientRPC: RPCManager;
+  private sessionManager: SessionManager;
   private idls: ArgsTypesOfCanister = {};
 
   constructor(clientRPC: BrowserRPC) {
-    this.clientRPC = clientRPC;
-    this.clientRPC.start();
+    this.clientRPC = new RPCManager({ instance: clientRPC });
+    this.sessionManager = new SessionManager({ rpc: this.clientRPC });
     this.versions = versions;
   }
 
   public async init() {
-    const metadata = getDomainMetadata();
-    const isConnected = await this.callClientRPC({
-      handler: "isConnected",
-      args: [metadata.url],
-      config: {
-        timeout: 0,
-        target: "",
-      },
-    });
-    if (isConnected) {
-      this.agent = await createAgent(
-        this.clientRPC,
-        metadata,
-        { whitelist: [] },
-        this.idls
-      );
-      const principal = await this.agent.getPrincipal();
-      this.principal = principal.toString();
-      this.accountId = await getAccountId(principal);
+    const { sessionData } = await this.sessionManager.getConnectionData();
+    if (sessionData) {
+      this.agent = sessionData?.agent;
+      this.principalId = sessionData?.principalId;
+      this.accountId = sessionData?.accountId;
     }
-  }
-
-  private async callClientRPC({ handler, args, config }): Promise<any> {
-    const metadata = getDomainMetadata();
-
-    const handleCallSuccess = (result) => {
-      return result;
-    };
-
-    const handleCallFailure = async (error) => {
-      const params = error.message;
-
-      if (error.message === "Request Timeout") {
-        return await this.clientRPC.call("handleTimeout", [metadata, params], {
-          timeout: 0,
-          target: "",
-        });
-      }
-
-      return await this.clientRPC.call("handleError", [metadata, params], {
-        timeout: 0,
-        target: "",
-      });
-    };
-
-    return this.clientRPC
-      .call(handler, args, config)
-      .then(handleCallSuccess, handleCallFailure);
-  }
-
-  public deleteAgent() {
-    this.agent = undefined;
-    return;
   }
 
   public async createActor<T>({
     canisterId,
     interfaceFactory,
   }: CreateActor<T>): Promise<ActorSubclass<T>> {
+    if (!canisterId || !validateCanisterId(canisterId))
+      throw Error("a canisterId valid is a required argument");
+    if (!interfaceFactory)
+      throw Error("interfaceFactory is a required argument");
     const metadata = getDomainMetadata();
     this.idls[canisterId] = getArgTypes(interfaceFactory);
     if (!this.agent) {
@@ -109,19 +78,17 @@ export default class Provider implements ProviderInterface {
   }
 
   // Todo: Add whole getPrincipal flow on main plug repo in case this has been deleted.
-  public async getPrincipal({ asString } = { asString: false }): Promise<Principal | string> {
+  public async getPrincipal(
+    { asString } = { asString: false }
+  ): Promise<Principal | string> {
     const metadata = getDomainMetadata();
-    const principal = this.principal;
+    const principal = this.principalId;
     if (principal) {
       return asString ? principal.toString() : Principal.from(principal);
     } else {
-      const response = await this.callClientRPC({
+      const response = await this.clientRPC.call({
         handler: "getPrincipal",
         args: [metadata.url],
-        config: {
-          timeout: 0,
-          target: "",
-        },
       });
 
       if (response && asString) {
@@ -132,56 +99,18 @@ export default class Provider implements ProviderInterface {
     }
   }
 
+  // Session management
   public async isConnected(): Promise<boolean> {
-    const metadata = getDomainMetadata();
-
-    return await this.callClientRPC({
-      handler: "isConnected",
-      args: [metadata.url],
-      config: {
-        timeout: 0,
-        target: "",
-      },
-    });
+   const connection = await this.sessionManager.getConnectionData();
+   return !!connection;
   }
 
   public async disconnect(): Promise<void> {
-    const metadata = getDomainMetadata();
-
-    await this.callClientRPC({
-      handler: "disconnect",
-      args: [metadata.url],
-      config: {
-        timeout: 0,
-        target: "",
-      },
-    });
+    await this.sessionManager.disconnect();
   }
 
   public async requestConnect(args: RequestConnectParams = {}): Promise<any> {
-    const { whitelist = [], host, timeout = 120000 } = args;
-    const metadata = getDomainMetadata();
-
-    const publicKey = await this.callClientRPC({
-      handler: "requestConnect",
-      args: [metadata, whitelist, timeout],
-      config: {
-        timeout: 0,
-        target: "",
-      },
-    });
-
-    this.agent = await createAgent(
-      this.clientRPC,
-      metadata,
-      { whitelist, host },
-      this.idls
-      );
-    const principal = await this.agent.getPrincipal();
-    this.principal = principal.toString();
-    this.accountId = await getAccountId(principal);
-      
-    return publicKey;
+    this.sessionManager.requestConnect(args);
   }
 
   public async createAgent({
@@ -203,31 +132,23 @@ export default class Provider implements ProviderInterface {
   public async requestBalance(accountId = null): Promise<bigint> {
     const metadata = getDomainMetadata();
 
-    const balances = await this.callClientRPC({
+    const balances = await this.clientRPC.call({
       handler: "requestBalance",
       args: [metadata, accountId],
-      config: {
-        timeout: 0,
-        target: "",
-      },
     });
-    return balances.map(balance => {
+    return balances.map((balance) => {
       // eslint-disable-next-line @typescript-eslint/no-unused-vars
       const { value, ...rest } = balance;
       return rest;
-    })
+    });
   }
 
   public async requestTransfer(params: RequestTransferParams): Promise<bigint> {
     const metadata = getDomainMetadata();
 
-    return await this.callClientRPC({
+    return await this.clientRPC.call({
       handler: "requestTransfer",
       args: [metadata, params],
-      config: {
-        timeout: 0,
-        target: "",
-      },
     });
   }
 
@@ -255,13 +176,9 @@ export default class Provider implements ProviderInterface {
       recursiveParseBigint(getSignInfoFromTransaction(trx, sender))
     );
 
-    const batchAccepted = await this.callClientRPC({
+    const batchAccepted = await this.clientRPC.call({
       handler: "batchTransactions",
       args: [metadata, signInfo],
-      config: {
-        timeout: 0,
-        target: "",
-      },
     });
 
     if (!batchAccepted) return false;
@@ -321,13 +238,9 @@ export default class Provider implements ProviderInterface {
   public async requestBurnXTC(params: RequestBurnXTCParams): Promise<any> {
     const metadata = getDomainMetadata();
 
-    return await this.callClientRPC({
+    return await this.clientRPC.call({
       handler: "requestBurnXTC",
       args: [metadata, params],
-      config: {
-        timeout: 0,
-        target: "",
-      },
     });
   }
 

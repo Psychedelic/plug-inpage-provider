@@ -21,6 +21,23 @@ const DEFAULT_CREATE_AGENT_ARGS: CreateAgentParamsFixed = {
   host: DEFAULT_HOST,
 };
 
+export const privateCreateAgent = async ({ publicKey, clientRPC, idls, preApprove = false, whitelist = DEFAULT_CREATE_AGENT_ARGS.whitelist, host = DEFAULT_CREATE_AGENT_ARGS.host }) => {
+  const identity = new PlugIdentity(
+    publicKey,
+    signFactory(clientRPC, idls, preApprove),
+    whitelist
+  );
+
+  const agent = new HttpAgent({
+    identity,
+    host,
+  });
+  if (!IC_MAINNET_URLS.includes(host)) {
+    await agent.fetchRootKey();
+  }
+  return agent;
+}
+
 export const createAgent = async (
   clientRPC,
   metadata,
@@ -36,20 +53,7 @@ export const createAgent = async (
       target: "",
     },
   );
-
-  const identity = new PlugIdentity(
-    publicKey,
-    signFactory(clientRPC, idls, preApprove),
-    whitelist
-  );
-
-  const agent = new HttpAgent({
-    identity,
-    host,
-  });
-  if (!IC_MAINNET_URLS.includes(host)) {
-    await agent.fetchRootKey();
-  }
+  const agent = await privateCreateAgent({ publicKey, clientRPC, idls, preApprove, whitelist, host });
   return agent;
 };
 
