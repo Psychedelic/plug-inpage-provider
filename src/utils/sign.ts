@@ -11,7 +11,6 @@ export interface SignInfo {
   sender?: string;
   arguments?: Buffer;
   decodedArguments?: JsonValue;
-  manual: boolean;
 }
 
 export interface AssuredSignInfo {
@@ -21,7 +20,6 @@ export interface AssuredSignInfo {
   sender: string;
   arguments: Buffer;
   decodedArguments?: JsonValue;
-  manual: boolean;
   preApprove: boolean;
 }
 
@@ -53,7 +51,6 @@ export const getSignInfoFromTransaction = (
     sender,
     arguments: Buffer.from([]),
     decodedArguments,
-    manual: false,
     preApprove: false,
     requestType: "unknown",
   };

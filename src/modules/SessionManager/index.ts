@@ -1,4 +1,4 @@
-import { PLUG_PROXY_HOST } from "../../constants";
+import { IC_MAINNET_URLS, PLUG_PROXY_HOST } from "../../constants";
 import getDomainMetadata from "../../utils/domain-metadata";
 import RPCManager from "../RPCManager";
 
@@ -24,7 +24,7 @@ export default class SessionManager {
   private sessionData: SessionData = null;
 
   constructor({ host, whitelist, timeout, rpc }: SessionManagerOptions) {
-    this.host = host || PLUG_PROXY_HOST;
+    this.host = host || IC_MAINNET_URLS[0];
     this.whitelist = whitelist || [];
     this.timeout = timeout || 120000;
     this.rpc = rpc;
