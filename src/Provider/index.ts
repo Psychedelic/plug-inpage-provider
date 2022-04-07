@@ -1,5 +1,5 @@
 import BrowserRPC from "@fleekhq/browser-rpc/dist/BrowserRPC";
-import { Agent, Actor, ActorSubclass } from "@dfinity/agent";
+import { Agent, Actor, ActorSubclass, PublicKey } from "@dfinity/agent";
 import { Principal } from "@dfinity/principal";
 
 import getDomainMetadata from "../utils/domain-metadata";
@@ -101,7 +101,7 @@ export default class Provider implements ProviderInterface {
 
   // Session management
   public async isConnected(): Promise<boolean> {
-   const connection = await this.sessionManager.getConnectionData();
+   const { connection } = await this.sessionManager.getConnectionData();
    return !!connection;
   }
 
@@ -109,8 +109,14 @@ export default class Provider implements ProviderInterface {
     await this.sessionManager.disconnect();
   }
 
-  public async requestConnect(args: RequestConnectParams = {}): Promise<any> {
-    this.sessionManager.requestConnect(args);
+  public async requestConnect(args: RequestConnectParams = {}): Promise<PublicKey> {
+    const { sessionData, connection } = await this.sessionManager.requestConnect(args);
+    if (sessionData) {
+      this.agent = sessionData?.agent;
+      this.principalId = sessionData?.principalId;
+      this.accountId = sessionData?.accountId;
+    }
+    return connection?.publicKey;
   }
 
   public async createAgent({
