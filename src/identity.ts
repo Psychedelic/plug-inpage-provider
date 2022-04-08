@@ -30,7 +30,59 @@ interface SerializedPublicKey {
     data: DerEncodedBlob;
   };
 }
+
+const transformRequestFactory =
+  (signCb: SignCb, whitelist: string[], publicKey: PublicKey) =>
+  async (request: HttpAgentRequest): Promise<unknown> => {
+    const { body, ...fields } = request;
+
+    const canister =
+      body?.canister_id instanceof Principal
+        ? body?.canister_id
+        : Principal.fromUint8Array(body?.canister_id?._arr);
+
+    if (
+      body.request_type !== ReadRequestType.ReadState &&
+      !whitelist.some((id) => id === canister.toString())
+    ) {
+      throw new Error(
+        `Request failed:\n` +
+          `  Code: 401\n` +
+          `  Body: Plug Identity is not allowed to make requests to canister Id ${canister.toString()}`
+      );
+    }
+
+    const requestId = await requestIdOf(body);
+    const sender_sig = await signCb(
+      blobFromBuffer(Buffer.concat([domainSeparator, requestId])),
+      {
+        sender: body?.sender && Principal.from(body.sender).toString(),
+        methodName: body?.method_name,
+        requestType: body?.request_type,
+        canisterId:
+          body?.canister_id && Principal.from(body.canister_id).toString(),
+        arguments: body?.arg,
+      }
+    );
+
+    const transformedResponse = {
+      ...fields,
+      body: {
+        content: body,
+        sender_pubkey: publicKey.toDer(),
+        sender_sig,
+      },
+    };
+    return transformedResponse;
+  };
 export class PlugIdentity extends SignIdentity {
+  /**
+   * Transform a request into a signed version of the request. This is done last
+   * after the transforms on the body of a request. The returned object can be
+   * anything, but must be serializable to CBOR.
+   * @param request - internet computer request to transform
+   */
+  public transformRequest;
   private publicKey: PublicKey;
   private whitelist: string[];
   constructor(
@@ -45,6 +97,11 @@ export class PlugIdentity extends SignIdentity {
     };
     this.signCb = signCb;
     this.whitelist = whitelist || [];
+    this.transformRequest = transformRequestFactory(
+      signCb,
+      this.whitelist,
+      this.publicKey
+    );
   }
 
   getPublicKey(): PublicKey {
@@ -69,46 +126,5 @@ export class PlugIdentity extends SignIdentity {
       this._principal = Principal.selfAuthenticating(this.publicKey.toDer());
     }
     return this._principal;
-  }
-  /**
-   * Transform a request into a signed version of the request. This is done last
-   * after the transforms on the body of a request. The returned object can be
-   * anything, but must be serializable to CBOR.
-   * @param request - internet computer request to transform
-   */
-  public async transformRequest(request: HttpAgentRequest): Promise<unknown> {
-    const { body, ...fields } = request;
-
-    const canister =
-      body?.canister_id instanceof Principal
-        ? body?.canister_id
-        : Principal.fromUint8Array(body?.canister_id?._arr);
-
-    if (
-      body.request_type !== ReadRequestType.ReadState &&
-      !this.whitelist.some((id) => id === canister.toString())
-    ) {
-      throw new Error(
-        `Request failed:\n` +
-          `  Code: 401\n` +
-          `  Body: Plug Identity is not allowed to make requests to canister Id ${canister.toString()}`
-      );
-    }
-
-    const requestId = await requestIdOf(body);
-    const sender_sig = await this.sign(
-      blobFromBuffer(Buffer.concat([domainSeparator, requestId])),
-      body
-    );
-
-    const transformedResponse = {
-      ...fields,
-      body: {
-        content: body,
-        sender_pubkey: this.getPublicKey().toDer(),
-        sender_sig,
-      },
-    };
-    return transformedResponse;
   }
 }
