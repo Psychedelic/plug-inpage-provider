@@ -1,13 +1,17 @@
-import { PLUG_PROXY_HOST } from "../../constants";
+import { IC_MAINNET_URLS, PLUG_PROXY_HOST } from "../../constants";
 import getDomainMetadata from "../../utils/domain-metadata";
 import RPCManager from "../RPCManager";
 
 import { RequestConnectParams } from "../../Provider/interfaces";
 import { getAccountId } from "../../utils/account";
 import { privateCreateAgent } from "../../utils/agent";
-import { HttpAgent } from "@dfinity/agent";
+import { HttpAgent, PublicKey } from "@dfinity/agent";
 
 type SessionData = { agent: HttpAgent, principalId: string, accountId: string } | null;
+type ConnectionData = {
+  sessionData: SessionData,
+  connection: RequestConnectParams & { publicKey: PublicKey }
+};
 
 interface SessionManagerOptions {
   rpc: RPCManager;
@@ -24,7 +28,7 @@ export default class SessionManager {
   private sessionData: SessionData = null;
 
   constructor({ host, whitelist, timeout, rpc }: SessionManagerOptions) {
-    this.host = host || PLUG_PROXY_HOST;
+    this.host = host || IC_MAINNET_URLS[0];
     this.whitelist = whitelist || [];
     this.timeout = timeout || 120000;
     this.rpc = rpc;
@@ -52,7 +56,7 @@ export default class SessionManager {
 
   // TODO: Optimize with local data once stable
   // Maybe something like return !!this.sessionData
-  public async getConnectionData() {
+  public async getConnectionData(): Promise<ConnectionData> {
     const metadata = getDomainMetadata();
     // Returns public key for now, see what we can do about connection data? 
     const connection =  await this.rpc.call({
@@ -66,10 +70,10 @@ export default class SessionManager {
       this.timeout = connection.timeout;
       sessionData = await this.createSession(connection.publicKey)
     }
-    return { sessionData, connection};
+    return { sessionData, connection };
   }
 
-  public async requestConnect(args: RequestConnectParams = {}): Promise<any> {
+  public async requestConnect(args: RequestConnectParams = {}): Promise<ConnectionData> {
     const { whitelist = [], host = PLUG_PROXY_HOST, timeout = 120000 } = args;
     const metadata = getDomainMetadata();
 
@@ -80,8 +84,8 @@ export default class SessionManager {
     this.host = host;
     this.whitelist = whitelist;
     this.timeout = timeout;
-    this.createSession(publicKey);
-    return publicKey;
+    const sessionData = await this.createSession(publicKey);
+    return { sessionData, connection: { host, whitelist, timeout, publicKey } };
   }
 
   public async disconnect(): Promise<void> {

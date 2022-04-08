@@ -60,7 +60,6 @@ export class PlugIdentity extends SignIdentity {
         signInfo?.canister_id &&
         Principal.from(signInfo.canister_id).toString(),
       arguments: signInfo?.arg,
-      manual: false,
     });
     return res as BinaryBlob;
   }
