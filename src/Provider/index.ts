@@ -109,7 +109,7 @@ export default class Provider implements ProviderInterface {
     await this.sessionManager.disconnect();
   }
 
-  public async requestConnect(args: RequestConnectParams = {}): Promise<PublicKey> {
+  public async requestConnect(args: RequestConnectParams = {}): Promise<PublicKey | undefined> {
     const { sessionData, connection } = await this.sessionManager.requestConnect(args);
     if (sessionData) {
       this.agent = sessionData?.agent;

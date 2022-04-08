@@ -10,7 +10,7 @@ import { HttpAgent, PublicKey } from "@dfinity/agent";
 type SessionData = { agent: HttpAgent, principalId: string, accountId: string } | null;
 type ConnectionData = {
   sessionData: SessionData,
-  connection: RequestConnectParams & { publicKey: PublicKey }
+  connection: RequestConnectParams & { publicKey?: PublicKey }
 };
 
 interface SessionManagerOptions {
@@ -26,19 +26,21 @@ export default class SessionManager {
   public timeout: number;
   private rpc: RPCManager;
   private sessionData: SessionData = null;
+  private updating: boolean;
 
   constructor({ host, whitelist, timeout, rpc }: SessionManagerOptions) {
     this.host = host || IC_MAINNET_URLS[0];
     this.whitelist = whitelist || [];
     this.timeout = timeout || 120000;
     this.rpc = rpc;
+    this.updating = false;
   }
 
   public getSession(): SessionData {
     return this.sessionData;
   }
 
-  private async createSession(publicKey: string): Promise<SessionData> {
+  private async createSession(publicKey: PublicKey): Promise<SessionData> {
     const agent = await privateCreateAgent({
       publicKey,
       clientRPC: this.rpc,
@@ -58,17 +60,19 @@ export default class SessionManager {
   // Maybe something like return !!this.sessionData
   public async getConnectionData(): Promise<ConnectionData> {
     const metadata = getDomainMetadata();
-    // Returns public key for now, see what we can do about connection data? 
-    const connection =  await this.rpc.call({
-      handler: "getConnectionData",
-      args: [metadata.url],
-    });
     let sessionData: SessionData = null;
-    if (connection) {
-      this.host = connection.host;
-      this.whitelist = connection.whitelist;
-      this.timeout = connection.timeout;
-      sessionData = await this.createSession(connection.publicKey)
+    let connection: ConnectionData['connection'] = {};
+    if (!this.updating) {
+      connection =  await this.rpc.call({
+        handler: "getConnectionData",
+        args: [metadata.url],
+      });
+      if (connection && connection.publicKey) {
+        this.host = connection.host;
+        this.whitelist = connection.whitelist || [];
+        this.timeout = connection.timeout || 120000;
+        sessionData = await this.createSession(connection.publicKey)
+      }
     }
     return { sessionData, connection };
   }
