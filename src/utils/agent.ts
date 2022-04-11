@@ -48,11 +48,7 @@ export const createAgent = async (
   idls,
   preApprove = false
 ) => {
-  const publicKey = await clientRPC.call("verifyWhitelist", [metadata, whitelist], {
-      timeout: 0,
-      target: "",
-    },
-  );
+  const publicKey = await clientRPC.call({ handler: "verifyWhitelist", args: [metadata, whitelist] });
   const agent = await privateCreateAgent({ publicKey, clientRPC, idls, preApprove, whitelist, host });
   return agent;
 };
