@@ -48,7 +48,8 @@ export default class Provider implements ProviderInterface {
   }
 
   public async init() {
-    const { sessionData } = await this.sessionManager.getConnectionData();
+    const connectionData = await this.sessionManager.init();
+    const { sessionData } = connectionData || {};
     if (sessionData) {
       this.agent = sessionData?.agent;
       this.principalId = sessionData?.principalId;
@@ -101,8 +102,9 @@ export default class Provider implements ProviderInterface {
 
   // Session management
   public async isConnected(): Promise<boolean> {
-   const { connection } = await this.sessionManager.getConnectionData();
-   return !!connection;
+    const connectionData = await this.sessionManager.getConnectionData();
+    const { connection } = connectionData || {};
+    return !!connection;
   }
 
   public async disconnect(): Promise<void> {
