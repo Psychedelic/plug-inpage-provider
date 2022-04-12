@@ -26,6 +26,7 @@ export default class SessionManager {
   public timeout: number;
   private rpc: RPCManager;
   private sessionData: SessionData = null;
+  private initialized: boolean = false;
 
   constructor({ host, whitelist, timeout, rpc }: SessionManagerOptions) {
     this.host = host || IC_MAINNET_URLS[0];
@@ -54,9 +55,19 @@ export default class SessionManager {
     return this.sessionData;
   }
 
+  public async init() {
+    let connData: ConnectionData | null = null
+    if (!this.initialized) {
+      connData = await this.getConnectionData();
+      this.initialized = true;
+    }
+    return connData;
+  }
+
   // TODO: Optimize with local data once stable
   // Maybe something like return !!this.sessionData
-  public async getConnectionData(): Promise<ConnectionData> {
+  public async getConnectionData(): Promise<ConnectionData | null> {
+    if (!this.initialized) return null;
     const metadata = getDomainMetadata();
     // Returns public key for now, see what we can do about connection data? 
     const connection =  await this.rpc.call({
