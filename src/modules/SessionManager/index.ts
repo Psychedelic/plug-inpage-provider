@@ -56,7 +56,6 @@ export default class SessionManager {
   }
 
   public async init() {
-    console.log('initialized on init()?', this.initialized);
     let connData: ConnectionData | null = null
     if (!this.initialized) {
       connData = await this.getConnectionData();
@@ -68,7 +67,6 @@ export default class SessionManager {
   // TODO: Optimize with local data once stable
   // Maybe something like return !!this.sessionData
   public async getConnectionData(): Promise<ConnectionData | null> {
-    console.log('initialized on getConnectionData()?', this.initialized);
     if (!this.initialized) return null;
     const metadata = getDomainMetadata();
     // Returns public key for now, see what we can do about connection data? 
