@@ -87,7 +87,7 @@ export class PlugIdentity extends SignIdentity {
   private whitelist: string[];
   constructor(
     publicKey: SerializedPublicKey,
-    private signCb: SignCb,
+    signCb: SignCb,
     whitelist: string[]
   ) {
     super();
@@ -95,7 +95,6 @@ export class PlugIdentity extends SignIdentity {
       ...publicKey,
       toDer: () => publicKey.derKey?.data ?? publicKey.derKey,
     };
-    this.signCb = signCb;
     this.whitelist = whitelist || [];
     this.transformRequest = transformRequestFactory(
       signCb,
@@ -108,17 +107,8 @@ export class PlugIdentity extends SignIdentity {
     return this.publicKey;
   }
 
-  async sign(blob: BinaryBlob, signInfo?: RequestType): Promise<BinaryBlob> {
-    const res = await this.signCb(blob, {
-      sender: signInfo?.sender && Principal.from(signInfo.sender).toString(),
-      methodName: signInfo?.method_name,
-      requestType: signInfo?.request_type,
-      canisterId:
-        signInfo?.canister_id &&
-        Principal.from(signInfo.canister_id).toString(),
-      arguments: signInfo?.arg,
-    });
-    return res as BinaryBlob;
+  async sign(_blob: BinaryBlob, _signInfo?: RequestType): Promise<BinaryBlob> {
+    throw "DONT USE SIGN FROM IDENTITY";
   }
 
   getPrincipal(): Principal {
