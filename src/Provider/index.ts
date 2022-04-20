@@ -168,11 +168,12 @@ export default class Provider implements ProviderInterface {
     const canisterList = transactions.map(
       (transaction) => transaction.canisterId
     );
+    const connectionData = await this.sessionManager.getConnectionData();
     const agent = await createAgent(
       this.clientRPC,
       metadata,
       {
-        whitelist: canisterList,
+        whitelist: canisterList, host: connectionData?.connection?.host,
       },
       this.idls,
       true
