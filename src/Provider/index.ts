@@ -169,7 +169,6 @@ export default class Provider implements ProviderInterface {
       (transaction) => transaction.canisterId
     );
     const connectionData = await this.sessionManager.getConnectionData();
-    console.log('Connection data on batch transactions', connectionData);
     const agent = await createAgent(
       this.clientRPC,
       metadata,

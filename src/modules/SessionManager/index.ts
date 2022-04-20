@@ -90,7 +90,7 @@ export default class SessionManager {
 
     const publicKey = await this.rpc.call({
       handler: "requestConnect",
-      args: [metadata, whitelist, timeout],
+      args: [metadata, whitelist, timeout, host],
     });
     this.host = host;
     this.whitelist = whitelist;
