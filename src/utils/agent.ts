@@ -22,6 +22,7 @@ import { IC_MAINNET_URLS } from "../constants";
 import { PlugIdentity } from "../identity";
 import RPCManager from "../modules/RPCManager";
 import { base64ToBuffer, bufferToBase64 } from "./communication";
+import getDomainMetadata from "./domain-metadata";
 import { signFactory } from "./sign";
 
 export interface CreateAgentParams {
@@ -52,6 +53,8 @@ const callMethodFactory =
     },
     identity?: Identity | Promise<Identity>
   ): Promise<SubmitResponse> => {
+    const metadata = getDomainMetadata();
+
     const canisterIdStr =
       typeof canisterId === "string" ? canisterId : canisterId.toString();
     const effectiveCanisterIdStr =
@@ -60,12 +63,17 @@ const callMethodFactory =
         : options.effectiveCanisterId?.toString();
     const result = await clientRPC.call({
       handler: "requestCall",
-      args: {
-        canisterId: canisterIdStr,
-        methodName: options.methodName,
-        arg: bufferToBase64(Buffer.from(blobToUint8Array(options.arg).buffer)),
-        effectiveCanisterId: effectiveCanisterIdStr,
-      },
+      args: [
+        metadata,
+        {
+          canisterId: canisterIdStr,
+          methodName: options.methodName,
+          arg: bufferToBase64(
+            Buffer.from(blobToUint8Array(options.arg).buffer)
+          ),
+          effectiveCanisterId: effectiveCanisterIdStr,
+        },
+      ],
     });
     if (result.error) throw result.error.message;
 
