@@ -23,6 +23,7 @@ import {
   RequestBurnXTCParams,
   RequestConnectParams,
   RequestTransferParams,
+  RequestTransTokenferParams,
   Transaction,
   TransactionPrevResponse
 } from "./interfaces";
@@ -156,6 +157,15 @@ export default class Provider implements ProviderInterface {
 
     return await this.clientRPC.call({
       handler: "requestTransfer",
+      args: [metadata, params],
+    });
+  }
+
+  public async requestTransferToken(params: RequestTransTokenferParams): Promise<string> {
+    const metadata = getDomainMetadata();
+
+    return await this.clientRPC.call({
+      handler: "requestTransferToken",
       args: [metadata, params],
     });
   }

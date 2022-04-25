@@ -40,6 +40,22 @@ export interface RequestTransferParams {
   amount: bigint;
   opts?: SendOpts;
 }
+
+// Fee and Memo is a bigint casted to string
+export interface SendOptsToken {
+  fee?: string;
+  memo?: string;
+  from_subaccount?: number;
+  created_at_time?: TimeStamp;
+}
+
+// The amount is a string with comma
+  export interface RequestTransTokenferParams {
+    to: string;
+    strAmount: string;
+    opts?: SendOpts;
+    token?: string;
+  }
   
 export interface CreateActor<T> {
   agent: HttpAgent;
