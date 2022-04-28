@@ -43,7 +43,7 @@ const DEFAULT_CREATE_AGENT_ARGS: CreateAgentParamsFixed = {
 };
 
 const callMethodFactory =
-  (clientRPC: RPCManager) =>
+  (clientRPC: RPCManager, preApprove = false) =>
   async (
     canisterId: Principal | string,
     options: {
@@ -76,6 +76,7 @@ const callMethodFactory =
           arg,
           effectiveCanisterId: effectiveCanisterIdStr,
         },
+        preApprove,
       ],
     });
 
@@ -163,7 +164,11 @@ const readStateMethodFactory =
   };
 
 class PlugAgent extends HttpAgent {
-  constructor(options: HttpAgentOptions = {}, clientRPC: RPCManager) {
+  constructor(
+    options: HttpAgentOptions = {},
+    clientRPC: RPCManager,
+    preApprove = false
+  ) {
     super(options);
 
     this["query"] = queryMethodFactory(clientRPC);
@@ -191,7 +196,8 @@ export const privateCreateAgent = async ({
       identity,
       host,
     },
-    clientRPC
+    clientRPC,
+    preApprove
   );
   if (!IC_MAINNET_URLS.includes(host)) {
     await agent.fetchRootKey();
