@@ -61,6 +61,11 @@ const callMethodFactory =
       typeof options.effectiveCanisterId === "string"
         ? options.effectiveCanisterId
         : options.effectiveCanisterId?.toString();
+
+    const arg = bufferToBase64(
+      Buffer.from(blobToUint8Array(options.arg).buffer)
+    );
+
     const result = await clientRPC.call({
       handler: "requestCall",
       args: [
@@ -68,19 +73,18 @@ const callMethodFactory =
         {
           canisterId: canisterIdStr,
           methodName: options.methodName,
-          arg: bufferToBase64(
-            Buffer.from(blobToUint8Array(options.arg).buffer)
-          ),
+          arg,
           effectiveCanisterId: effectiveCanisterIdStr,
         },
       ],
     });
+
     if (result.error) throw result.error.message;
 
     return {
-      ...result.response,
+      ...result,
       requestId: blobFromUint8Array(
-        new Uint8Array(base64ToBuffer(result.response.requestId))
+        new Uint8Array(base64ToBuffer(result.requestId))
       ),
     };
   };
@@ -96,26 +100,28 @@ const queryMethodFactory =
       typeof canisterId === "string" ? canisterId : canisterId.toString();
     const result = await clientRPC.call({
       handler: "requestQuery",
-      args: {
-        canisterId: canisterIdStr,
-        methodName: fields.methodName,
-        arg: bufferToBase64(Buffer.from(blobToUint8Array(fields.arg).buffer)),
-      },
+      args: [
+        {
+          canisterId: canisterIdStr,
+          methodName: fields.methodName,
+          arg: bufferToBase64(Buffer.from(blobToUint8Array(fields.arg).buffer)),
+        },
+      ],
     });
+
     if (result.error) throw result.error.message;
 
-    return result.response.status === QueryResponseStatus.Replied
+    return result.status === QueryResponseStatus.Replied
       ? {
-          status: QueryResponseStatus.Replied,
+          ...result,
           reply: {
             arg: blobFromUint8Array(
-              new Uint8Array(base64ToBuffer(result.response.status))
+              new Uint8Array(base64ToBuffer(result.reply.arg))
             ),
           },
         }
       : {
-          ...result.response,
-          status: QueryResponseStatus.Rejected,
+          ...result,
         };
   };
 
@@ -128,22 +134,32 @@ const readStateMethodFactory =
   ): Promise<ReadStateResponse> => {
     const canisterIdStr =
       typeof canisterId === "string" ? canisterId : canisterId.toString();
-    const result = await clientRPC.call({
-      handler: "requestReadState",
-      args: {
-        canisterId: canisterIdStr,
-        paths: fields.paths[0].map((path) =>
-          bufferToBase64(Buffer.from(blobToUint8Array(path).buffer))
-        ),
-      },
-    });
-    if (result.error) throw result.error.message;
 
-    return {
-      certificate: blobFromUint8Array(
-        new Uint8Array(base64ToBuffer(result.response.status))
-      ),
-    };
+    const paths = fields.paths[0].map((path) =>
+      bufferToBase64(Buffer.from(blobToUint8Array(path).buffer))
+    );
+
+    try {
+      const result = await clientRPC.call({
+        handler: "requestReadState",
+        args: [
+          {
+            canisterId: canisterIdStr,
+            paths,
+          },
+        ],
+      });
+
+      if (result.error) throw result.error.message;
+
+      return {
+        certificate: blobFromUint8Array(
+          new Uint8Array(base64ToBuffer(result.certificate))
+        ),
+      };
+    } catch (e) {
+      throw e;
+    }
   };
 
 class PlugAgent extends HttpAgent {
@@ -193,8 +209,18 @@ export const createAgent = async (
   idls,
   preApprove = false
 ) => {
-  const publicKey = await clientRPC.call({ handler: "verifyWhitelist", args: [metadata, whitelist] });
-  const agent = await privateCreateAgent({ publicKey, clientRPC, idls, preApprove, whitelist, host });
+  const publicKey = await clientRPC.call({
+    handler: "verifyWhitelist",
+    args: [metadata, whitelist],
+  });
+  const agent = await privateCreateAgent({
+    publicKey,
+    clientRPC,
+    idls,
+    preApprove,
+    whitelist,
+    host,
+  });
   return agent;
 };
 
