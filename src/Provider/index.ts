@@ -259,7 +259,7 @@ export default class Provider implements ProviderInterface {
     const metadata = getDomainMetadata();
 
     return await this.clientRPC.call({
-      handler: "requestICNSReverseResolvedName",
+      handler: "getICNSInfo",
       args: [metadata],
     });
   }
