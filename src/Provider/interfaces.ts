@@ -96,4 +96,5 @@ export interface ProviderInterface {
   agent?: Agent | null;
   principal?: string;
   accountId?: string;
+  getICNSReverseResolvedName: () => Promise<string | null>;
 }
