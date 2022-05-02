@@ -254,6 +254,15 @@ export default class Provider implements ProviderInterface {
     return true;
   }
 
+  public async getICNSReverseResolvedName(): Promise<string | null> {
+    const metadata = getDomainMetadata();
+
+    return await this.clientRPC.call({
+      handler: "requestICNSReverseResolvedName",
+      args: [metadata],
+    });
+  }
+
   public async requestBurnXTC(params: RequestBurnXTCParams): Promise<any> {
     const metadata = getDomainMetadata();
 
