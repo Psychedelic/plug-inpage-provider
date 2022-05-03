@@ -43,7 +43,7 @@ export const getSignInfoFromTransaction = (
 ): AssuredSignInfo => {
   const decodedArguments = Array.isArray(transaction.args)
     ? transaction.args
-    : transaction.args([]);
+    : undefined;
 
   return {
     methodName: transaction.methodName,
@@ -72,9 +72,9 @@ export const signFactory =
     const payloadArr = new Uint8Array(payload);
 
     if (signInfo)
-      signInfo.decodedArguments = signInfo.arguments ? recursiveParseBigint(
-        decodeArgs(signInfo, argsTypes)
-      ) : [];
+      signInfo.decodedArguments = signInfo.arguments
+        ? recursiveParseBigint(decodeArgs(signInfo, argsTypes))
+        : [];
 
     const res = await clientRPC.call({
       handler: "requestSign",

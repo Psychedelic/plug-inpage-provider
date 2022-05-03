@@ -16,7 +16,7 @@ import {
 } from "../utils/sign";
 import { createActor, createAgent, CreateAgentParams } from "../utils/agent";
 import { recursiveParseBigint } from "../utils/bigint";
-import { 
+import {
   CreateActor,
   ProviderInterface,
   ProviderInterfaceVersions,
@@ -25,12 +25,11 @@ import {
   RequestTransferParams,
   RequestTransTokenferParams,
   Transaction,
-  TransactionPrevResponse
+  TransactionPrevResponse,
 } from "./interfaces";
 import RPCManager from "../modules/RPCManager";
 import SessionManager from "../modules/SessionManager";
 import { validateCanisterId } from "../utils/account";
-
 
 export default class Provider implements ProviderInterface {
   public agent?: Agent;
@@ -112,8 +111,11 @@ export default class Provider implements ProviderInterface {
     await this.sessionManager.disconnect();
   }
 
-  public async requestConnect(args: RequestConnectParams = {}): Promise<PublicKey> {
-    const { sessionData, connection } = await this.sessionManager.requestConnect(args);
+  public async requestConnect(
+    args: RequestConnectParams = {}
+  ): Promise<PublicKey> {
+    const { sessionData, connection } =
+      await this.sessionManager.requestConnect(args);
     if (sessionData) {
       this.agent = sessionData?.agent;
       this.principalId = sessionData?.principalId;
@@ -161,7 +163,9 @@ export default class Provider implements ProviderInterface {
     });
   }
 
-  public async requestTransferToken(params: RequestTransTokenferParams): Promise<string> {
+  public async requestTransferToken(
+    params: RequestTransTokenferParams
+  ): Promise<string> {
     const metadata = getDomainMetadata();
 
     return await this.clientRPC.call({
@@ -179,28 +183,30 @@ export default class Provider implements ProviderInterface {
       (transaction) => transaction.canisterId
     );
     const connectionData = await this.sessionManager.getConnectionData();
-    const agent = await createAgent(
-      this.clientRPC,
-      metadata,
-      {
-        whitelist: canisterList, host: connectionData?.connection?.host,
-      },
-      this.idls,
-      true
-    );
 
-    const sender = (await agent.getPrincipal()).toString();
+    const sender = (await this.getPrincipal({ asString: true })) as string;
 
     const signInfo = transactions.map((trx) =>
       recursiveParseBigint(getSignInfoFromTransaction(trx, sender))
     );
 
-    const batchAccepted = await this.clientRPC.call({
+    const batchResponse = await this.clientRPC.call({
       handler: "batchTransactions",
       args: [metadata, signInfo],
     });
 
-    if (!batchAccepted) return false;
+    if (!batchResponse.status) return false;
+
+    const agent = await createAgent(
+      this.clientRPC,
+      metadata,
+      {
+        whitelist: canisterList,
+        host: connectionData?.connection?.host,
+      },
+      this.idls,
+      batchResponse.txId
+    );
 
     let transactionIndex = 0;
     let prevTransactionsData: TransactionPrevResponse[] = [];
