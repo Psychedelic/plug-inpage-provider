@@ -18,6 +18,7 @@ import { createActor, createAgent, CreateAgentParams } from "../utils/agent";
 import { recursiveParseBigint } from "../utils/bigint";
 import {
   CreateActor,
+  ICNSInfo,
   ProviderInterface,
   ProviderInterfaceVersions,
   RequestBurnXTCParams,
@@ -258,6 +259,15 @@ export default class Provider implements ProviderInterface {
     }
 
     return true;
+  }
+
+  public async getICNSInfo(): Promise<ICNSInfo> {
+    const metadata = getDomainMetadata();
+
+    return await this.clientRPC.call({
+      handler: "getICNSInfo",
+      args: [metadata],
+    });
   }
 
   public async requestBurnXTC(params: RequestBurnXTCParams): Promise<any> {

@@ -77,6 +77,11 @@ export interface ProviderInterfaceVersions {
   provider: string;
   extension: string;
 }
+
+export interface ICNSInfo {
+  names: Array<string>;
+  reverseResolvedName?: string;
+}
   
 export interface ProviderInterface {
   isConnected(): Promise<boolean>;
@@ -96,4 +101,5 @@ export interface ProviderInterface {
   agent?: Agent | null;
   principal?: string;
   accountId?: string;
+  getICNSInfo: () => Promise<ICNSInfo>;
 }
