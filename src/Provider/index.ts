@@ -68,11 +68,12 @@ export default class Provider implements ProviderInterface {
       throw Error("interfaceFactory is a required argument");
     const metadata = getDomainMetadata();
     this.idls[canisterId] = getArgTypes(interfaceFactory);
+    const connectionData = await this.sessionManager.getConnectionData();
     if (!this.agent) {
       this.agent = await createAgent(
         this.clientRPC,
         metadata,
-        { whitelist: [canisterId] },
+        { whitelist: [canisterId], host: connectionData?.connection?.host },
         this.idls
       );
     }
