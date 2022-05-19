@@ -31,6 +31,7 @@ import {
 import RPCManager from "../modules/RPCManager";
 import SessionManager from "../modules/SessionManager";
 import { validateCanisterId } from "../utils/account";
+import { bufferToBase64 } from "../utils/communication";
 
 export default class Provider implements ProviderInterface {
   public agent?: Agent;
@@ -187,9 +188,17 @@ export default class Provider implements ProviderInterface {
 
     const sender = (await this.getPrincipal({ asString: true })) as string;
 
-    const signInfo = transactions.map((trx) =>
-      recursiveParseBigint(getSignInfoFromTransaction(trx, sender))
-    );
+    console.log("AFTER SIGN INFO");
+    const signInfo = transactions
+      .map((trx) => getSignInfoFromTransaction(trx, sender))
+      .map((trx) =>
+        recursiveParseBigint({
+          ...trx,
+          arguments: bufferToBase64(Buffer.from(trx.arguments)),
+        })
+      );
+
+    console.log("before sign info", signInfo);
 
     const batchResponse = await this.clientRPC.call({
       handler: "batchTransactions",
