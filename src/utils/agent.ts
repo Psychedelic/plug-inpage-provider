@@ -1,8 +1,18 @@
-import { HttpAgent, Actor, ActorSubclass } from "@dfinity/agent";
+import {
+  HttpAgent,
+  Actor,
+  ActorSubclass,
+  HttpAgentOptions,
+} from "@dfinity/agent";
 import { IC_MAINNET_URLS } from "../constants";
 
 import { PlugIdentity } from "../identity";
-import { signFactory } from "./sign";
+import RPCManager from "../modules/RPCManager";
+import {
+  queryMethodFactory,
+  callMethodFactory,
+  readStateMethodFactory,
+} from "./factories/agent";
 
 export interface CreateAgentParams {
   whitelist?: string[];
@@ -21,22 +31,43 @@ const DEFAULT_CREATE_AGENT_ARGS: CreateAgentParamsFixed = {
   host: DEFAULT_HOST,
 };
 
-export const privateCreateAgent = async ({ publicKey, clientRPC, idls, preApprove = false, whitelist = DEFAULT_CREATE_AGENT_ARGS.whitelist, host = DEFAULT_CREATE_AGENT_ARGS.host }) => {
-  const identity = new PlugIdentity(
-    publicKey,
-    signFactory(clientRPC, idls, preApprove),
-    whitelist
-  );
+class PlugAgent extends HttpAgent {
+  constructor(
+    options: HttpAgentOptions = {},
+    clientRPC: RPCManager,
+    batchTxId = ""
+  ) {
+    super(options);
 
-  const agent = new HttpAgent({
-    identity,
-    host,
-  });
+    this["query"] = queryMethodFactory(clientRPC);
+    this["call"] = callMethodFactory(clientRPC, batchTxId);
+    this["readState"] = readStateMethodFactory(clientRPC);
+  }
+}
+
+export const privateCreateAgent = async ({
+  publicKey,
+  clientRPC,
+  idls,
+  batchTxId = "",
+  whitelist = DEFAULT_CREATE_AGENT_ARGS.whitelist,
+  host = DEFAULT_CREATE_AGENT_ARGS.host,
+}) => {
+  const identity = new PlugIdentity(publicKey, whitelist);
+
+  const agent = new PlugAgent(
+    {
+      identity,
+      host,
+    },
+    clientRPC,
+    batchTxId
+  );
   if (!IC_MAINNET_URLS.includes(host)) {
     await agent.fetchRootKey();
   }
   return agent;
-}
+};
 
 export const createAgent = async (
   clientRPC,
@@ -46,10 +77,20 @@ export const createAgent = async (
     host = DEFAULT_CREATE_AGENT_ARGS.host,
   }: CreateAgentParams,
   idls,
-  preApprove = false
+  batchTxId = ""
 ) => {
-  const publicKey = await clientRPC.call({ handler: "verifyWhitelist", args: [metadata, whitelist] });
-  const agent = await privateCreateAgent({ publicKey, clientRPC, idls, preApprove, whitelist, host });
+  const publicKey = await clientRPC.call({
+    handler: "verifyWhitelist",
+    args: [metadata, whitelist],
+  });
+  const agent = await privateCreateAgent({
+    publicKey,
+    clientRPC,
+    idls,
+    batchTxId,
+    whitelist,
+    host,
+  });
   return agent;
 };
 
