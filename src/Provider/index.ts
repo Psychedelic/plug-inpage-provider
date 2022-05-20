@@ -189,7 +189,6 @@ export default class Provider implements ProviderInterface {
 
     const sender = (await this.getPrincipal({ asString: true })) as string;
 
-    console.log("AFTER SIGN INFO");
     const signInfo = transactions
       .map((trx) => getSignInfoFromTransaction(trx, sender))
       .map((trx) =>
@@ -198,8 +197,6 @@ export default class Provider implements ProviderInterface {
           arguments: bufferToBase64(Buffer.from(trx.arguments)),
         })
       );
-
-    console.log("before sign info", signInfo);
 
     const batchResponse = await this.clientRPC.call({
       handler: "batchTransactions",
