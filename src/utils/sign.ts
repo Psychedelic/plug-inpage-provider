@@ -41,15 +41,22 @@ export const getSignInfoFromTransaction = (
   transaction: Transaction,
   sender: string
 ): AssuredSignInfo => {
+  const interfaceFactory = transaction.idl({ IDL });
+  const [methodName, func] = interfaceFactory?._fields?.find(
+    ([methodName, _func]) => methodName === transaction.methodName
+  ) || [undefined, undefined];
   const decodedArguments = Array.isArray(transaction.args)
     ? transaction.args
     : undefined;
 
   return {
-    methodName: transaction.methodName,
+    methodName: methodName || transaction.methodName,
     canisterId: transaction.canisterId,
     sender,
-    arguments: Buffer.from([]),
+    arguments:
+      decodedArguments && Array.isArray(transaction.args) && func
+        ? IDL.encode(func.argTypes, transaction.args)
+        : Buffer.from([]),
     decodedArguments,
     preApprove: false,
     requestType: "unknown",
