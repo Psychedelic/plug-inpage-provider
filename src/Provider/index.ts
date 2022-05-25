@@ -303,14 +303,8 @@ export default class Provider implements ProviderInterface {
   }
 
   private hookToWindowEvents = () => {
-    window.addEventListener('updateProvider', () => {
-      console.log('reached provider');
-      this.sessionManager.getConnectionData().then((data) => {
-        if (data?.connection) {
-          console.log('Provider connection updated correctly', data);
-          // window.postMessage({action: 'GOT_DUCK', payload: 'duck'}, '*');
-        }
-      });
+    window.addEventListener('updateConnection', () => {
+      this.sessionManager.updateConnection();
    }, false);
   }
 }

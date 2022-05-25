@@ -1,6 +1,7 @@
 import { Agent, HttpAgent, ActorSubclass } from "@dfinity/agent";
 import { IDL } from "@dfinity/candid";
 import { Principal } from "@dfinity/principal";
+import { ConnectionData } from "../modules/SessionManager";
 
 import { CreateAgentParams } from "../utils/agent";
 
@@ -71,6 +72,7 @@ export interface RequestBurnXTCParams {
   
 export interface RequestConnectParams extends CreateAgentParams {
   timeout?: number;
+  onConnectionUpdate?: (data: ConnectionData) => any;
 }
   
 export interface ProviderInterfaceVersions {
