@@ -8,7 +8,7 @@ import { privateCreateAgent } from "../../utils/agent";
 import { HttpAgent, PublicKey } from "@dfinity/agent";
 
 type SessionData = { agent: HttpAgent, principalId: string, accountId: string } | null;
-type ConnectionData = {
+export type ConnectionData = {
   sessionData: SessionData,
   connection: RequestConnectParams & { publicKey: PublicKey }
 };
@@ -27,6 +27,7 @@ export default class SessionManager {
   private rpc: RPCManager;
   private sessionData: SessionData = null;
   private initialized: boolean = false;
+  private onConnectionUpdate?: (data: ConnectionData) => any;
 
   constructor({ host, whitelist, timeout, rpc }: SessionManagerOptions) {
     this.host = host || IC_MAINNET_URLS[0];
@@ -95,6 +96,7 @@ export default class SessionManager {
     this.host = host;
     this.whitelist = whitelist;
     this.timeout = timeout;
+    this.onConnectionUpdate = args?.onConnectionUpdate;
     const sessionData = await this.createSession(publicKey);
     return { sessionData, connection: { host, whitelist, timeout, publicKey } };
   }
@@ -107,6 +109,13 @@ export default class SessionManager {
       args: [metadata.url],
     });
     this.sessionData = null;
+  }
+
+  public async updateConnection() {
+    const data = await this.getConnectionData();
+    if (data) {
+      this.onConnectionUpdate?.(data);
+    }
   }
 
 };

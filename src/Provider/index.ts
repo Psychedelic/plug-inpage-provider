@@ -57,6 +57,7 @@ export default class Provider implements ProviderInterface {
       this.principalId = sessionData?.principalId;
       this.accountId = sessionData?.accountId;
     }
+    this.hookToWindowEvents();
   }
 
   public async createActor<T>({
@@ -299,5 +300,11 @@ export default class Provider implements ProviderInterface {
         queryTransform: transformOverrideHandler,
       },
     });
+  }
+
+  private hookToWindowEvents = () => {
+    window.addEventListener('updateConnection', () => {
+      this.sessionManager.updateConnection();
+   }, false);
   }
 }
