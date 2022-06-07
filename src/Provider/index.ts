@@ -71,15 +71,21 @@ export default class Provider implements ProviderInterface {
     const metadata = getDomainMetadata();
     this.idls[canisterId] = getArgTypes(interfaceFactory);
     const connectionData = await this.sessionManager.getConnectionData();
-    if (!this.agent) {
-      this.agent = await createAgent(
-        this.clientRPC,
-        metadata,
-        { whitelist: [canisterId], host: connectionData?.connection?.host },
-        this.idls
-      );
-    }
-    return createActor<T>(this.agent, canisterId, interfaceFactory);
+    const agent = await createAgent(
+      this.clientRPC,
+      metadata,
+      { whitelist: [canisterId], host: connectionData?.connection?.host },
+      getArgTypes(interfaceFactory),
+    );
+    // if (!this.agent) {
+    //   this.agent = await createAgent(
+    //     this.clientRPC,
+    //     metadata,
+    //     { whitelist: [canisterId], host: connectionData?.connection?.host },
+    //     this.idls
+    //   );
+    // }
+    return createActor<T>(agent, canisterId, interfaceFactory);
   }
 
   // Todo: Add whole getPrincipal flow on main plug repo in case this has been deleted.
@@ -138,7 +144,7 @@ export default class Provider implements ProviderInterface {
       this.clientRPC,
       metadata,
       { whitelist, host },
-      this.idls
+      null,
     );
 
     return !!this.agent;
@@ -213,7 +219,7 @@ export default class Provider implements ProviderInterface {
         whitelist: canisterList,
         host: connectionData?.connection?.host,
       },
-      this.idls,
+      null,
       batchResponse.txId
     );
 
@@ -303,8 +309,14 @@ export default class Provider implements ProviderInterface {
   }
 
   private hookToWindowEvents = () => {
-    window.addEventListener('updateConnection', () => {
-      this.sessionManager.updateConnection();
+    window.addEventListener('updateConnection', async () => {
+      const connectionData = await this.sessionManager.updateConnection();
+      const { sessionData } = connectionData || {};
+      if (sessionData) {
+        this.agent = sessionData?.agent;
+        this.principalId = sessionData?.principalId;
+        this.accountId = sessionData?.accountId;
+      }
    }, false);
   }
 }

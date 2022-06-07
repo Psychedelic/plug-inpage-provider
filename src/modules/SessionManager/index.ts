@@ -116,6 +116,7 @@ export default class SessionManager {
     if (data) {
       this.onConnectionUpdate?.(data);
     }
+    return data;
   }
 
 };

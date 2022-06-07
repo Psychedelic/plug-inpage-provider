@@ -11,15 +11,17 @@ import {
   BinaryBlob,
   blobFromUint8Array,
   blobToUint8Array,
+  IDL,
 } from "@dfinity/candid";
 import { Principal } from "@dfinity/principal";
 
 import RPCManager from "../../modules/RPCManager";
+import { recursiveParseBigint } from "../bigint";
 import { base64ToBuffer, bufferToBase64 } from "../communication";
 import getDomainMetadata from "../domain-metadata";
 
 export const callMethodFactory =
-  (clientRPC: RPCManager, batchTxId = "") =>
+  (clientRPC: RPCManager, batchTxId = "", idl: null | { [key: string]: any }) =>
   async (
     canisterId: Principal | string,
     options: {
@@ -30,7 +32,10 @@ export const callMethodFactory =
     identity?: Identity | Promise<Identity>
   ): Promise<SubmitResponse> => {
     const metadata = getDomainMetadata();
-
+    let decodedArgs = undefined;
+    if (idl) {
+      decodedArgs = recursiveParseBigint(IDL.decode(idl[options.methodName], options.arg));
+    }
     const arg = bufferToBase64(
       Buffer.from(blobToUint8Array(options.arg).buffer)
     );
@@ -46,6 +51,7 @@ export const callMethodFactory =
           effectiveCanisterId: options.effectiveCanisterId?.toString(),
         },
         batchTxId,
+        decodedArgs,
       ],
     });
 
