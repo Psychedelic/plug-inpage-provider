@@ -4,21 +4,13 @@ import {
   ReadRequest,
   CallRequest,
 } from "@dfinity/agent";
-import { BinaryBlob, DerEncodedBlob } from "@dfinity/candid";
+import { BinaryBlob } from "@dfinity/candid";
 import { Principal } from "@dfinity/principal";
+import { SerializedPublicKey } from "./Provider/interfaces";
 
 type RequestType = ReadRequest | CallRequest;
 
-interface SerializedPublicKey {
-  rawKey: {
-    type: string;
-    data: Uint8Array;
-  };
-  derKey: {
-    type: string;
-    data: DerEncodedBlob;
-  };
-}
+
 export class PlugIdentity extends SignIdentity {
   /**
    * Transform a request into a signed version of the request. This is done last

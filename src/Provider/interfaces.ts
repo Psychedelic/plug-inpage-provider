@@ -1,5 +1,5 @@
 import { Agent, HttpAgent, ActorSubclass } from "@dfinity/agent";
-import { IDL } from "@dfinity/candid";
+import { DerEncodedBlob, IDL } from "@dfinity/candid";
 import { Principal } from "@dfinity/principal";
 import { ConnectionData } from "../modules/SessionManager";
 
@@ -104,4 +104,15 @@ export interface ProviderInterface {
   principal?: string;
   accountId?: string;
   getICNSInfo: () => Promise<ICNSInfo>;
+}
+
+export interface SerializedPublicKey {
+  rawKey: {
+    type: string;
+    data: Uint8Array;
+  };
+  derKey: {
+    type: string;
+    data: DerEncodedBlob;
+  };
 }
