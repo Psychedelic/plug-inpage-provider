@@ -33,14 +33,12 @@ export const callMethodFactory =
   ): Promise<SubmitResponse> => {
     const metadata = getDomainMetadata();
     let decodedArgs = null;
-    console.log('if we have idl, we get decode args', idl);
     if (idl) {
       decodedArgs = recursiveParseBigint(IDL.decode(idl[options.methodName], options.arg));
     }
     const arg = bufferToBase64(
       Buffer.from(blobToUint8Array(options.arg).buffer)
     );
-    console.log('before calling the extension', arg, decodedArgs);
     const result = await clientRPC.call({
       handler: "requestCall",
       args: [
