@@ -77,14 +77,6 @@ export default class Provider implements ProviderInterface {
       { whitelist: [canisterId], host: connectionData?.connection?.host },
       getArgTypes(interfaceFactory),
     );
-    // if (!this.agent) {
-    //   this.agent = await createAgent(
-    //     this.clientRPC,
-    //     metadata,
-    //     { whitelist: [canisterId], host: connectionData?.connection?.host },
-    //     this.idls
-    //   );
-    // }
     return createActor<T>(agent, canisterId, interfaceFactory);
   }
 
