@@ -2,7 +2,7 @@ import { IC_MAINNET_URLS, PLUG_PROXY_HOST } from "../../constants";
 import getDomainMetadata from "../../utils/domain-metadata";
 import RPCManager from "../RPCManager";
 
-import { RequestConnectParams } from "../../Provider/interfaces";
+import { RequestConnectParams, SerializedPublicKey } from "../../Provider/interfaces";
 import { getAccountId } from "../../utils/account";
 import { privateCreateAgent } from "../../utils/agent";
 import { HttpAgent, PublicKey } from "@dfinity/agent";
@@ -40,13 +40,12 @@ export default class SessionManager {
     return this.sessionData;
   }
 
-  private async createSession(publicKey: string): Promise<SessionData> {
+  private async createSession(publicKey: SerializedPublicKey): Promise<SessionData> {
     const agent = await privateCreateAgent({
       publicKey,
       clientRPC: this.rpc,
       whitelist: this.whitelist || [],
       host: this.host || PLUG_PROXY_HOST,
-      idls: {},
     });
     const principal = await agent.getPrincipal();
     const principalId = principal.toString();
@@ -116,6 +115,7 @@ export default class SessionManager {
     if (data) {
       this.onConnectionUpdate?.(data);
     }
+    return data;
   }
 
 };

@@ -63,7 +63,7 @@ export const getSignInfoFromTransaction = (
   };
 };
 
-const decodeArgs = (signInfo: SignInfo, argsTypes: ArgsTypesOfCanister) => {
+export const decodeArgs = (signInfo: SignInfo, argsTypes: ArgsTypesOfCanister) => {
   if (canDecodeArgs(signInfo, argsTypes)) {
     const assuredSignInfo = signInfo as AssuredSignInfo;
     const funArgumentsTypes =
@@ -92,7 +92,7 @@ export const signFactory =
 
 export const getArgTypes = (interfaceFactory: IDL.InterfaceFactory) => {
   const service = interfaceFactory({ IDL });
-  const methodArgType = {};
+  const methodArgType: { [key: string]: any } = {};
   service._fields.forEach(
     ([methodName, fun]) => (methodArgType[methodName] = fun.argTypes)
   );

@@ -4,10 +4,12 @@ import {
   ActorSubclass,
   HttpAgentOptions,
 } from "@dfinity/agent";
+
 import { IC_MAINNET_URLS } from "../constants";
 
 import { PlugIdentity } from "../identity";
 import RPCManager from "../modules/RPCManager";
+import { SerializedPublicKey } from "../Provider/interfaces";
 import {
   queryMethodFactory,
   callMethodFactory,
@@ -35,24 +37,34 @@ class PlugAgent extends HttpAgent {
   constructor(
     options: HttpAgentOptions = {},
     clientRPC: RPCManager,
+    idl: { [key: string]: any } | null,
     batchTxId = ""
   ) {
     super(options);
 
     this["query"] = queryMethodFactory(clientRPC);
-    this["call"] = callMethodFactory(clientRPC, batchTxId);
+    this["call"] = callMethodFactory(clientRPC, batchTxId, idl);
     this["readState"] = readStateMethodFactory(clientRPC);
   }
 }
 
+interface PrivateCreateAgentParams {
+  publicKey: SerializedPublicKey;
+  clientRPC: any;
+  idl?: { [key: string]: any} | null;
+  batchTxId?: string;
+  whitelist?: Array<string>;
+  host?:string;
+};
+
 export const privateCreateAgent = async ({
   publicKey,
   clientRPC,
-  idls,
+  idl = null,
   batchTxId = "",
   whitelist = DEFAULT_CREATE_AGENT_ARGS.whitelist,
   host = DEFAULT_CREATE_AGENT_ARGS.host,
-}) => {
+}: PrivateCreateAgentParams) => {
   const identity = new PlugIdentity(publicKey, whitelist);
 
   const agent = new PlugAgent(
@@ -61,7 +73,8 @@ export const privateCreateAgent = async ({
       host,
     },
     clientRPC,
-    batchTxId
+    idl,
+    batchTxId,
   );
   if (!IC_MAINNET_URLS.includes(host)) {
     await agent.fetchRootKey();
@@ -76,7 +89,7 @@ export const createAgent = async (
     whitelist = DEFAULT_CREATE_AGENT_ARGS.whitelist,
     host = DEFAULT_CREATE_AGENT_ARGS.host,
   }: CreateAgentParams,
-  idls,
+  idl: { [key: string]: any } | null = null,
   batchTxId = ""
 ) => {
   const publicKey = await clientRPC.call({
@@ -86,7 +99,7 @@ export const createAgent = async (
   const agent = await privateCreateAgent({
     publicKey,
     clientRPC,
-    idls,
+    idl,
     batchTxId,
     whitelist,
     host,
