@@ -24,7 +24,7 @@ import {
   RequestBurnXTCParams,
   RequestConnectParams,
   RequestTransferParams,
-  RequestTransTokenferParams,
+  // RequestTransTokenferParams,
   Transaction,
   TransactionPrevResponse,
 } from "./interfaces";
@@ -165,16 +165,16 @@ export default class Provider implements ProviderInterface {
     });
   }
 
-  public async requestTransferToken(
-    params: RequestTransTokenferParams
-  ): Promise<string> {
-    const metadata = getDomainMetadata();
+  // public async requestTransferToken(
+  //   params: RequestTransTokenferParams
+  // ): Promise<string> {
+  //   const metadata = getDomainMetadata();
 
-    return await this.clientRPC.call({
-      handler: "requestTransferToken",
-      args: [metadata, params],
-    });
-  }
+  //   return await this.clientRPC.call({
+  //     handler: "requestTransferToken",
+  //     args: [metadata, params],
+  //   });
+  // }
 
   public async batchTransactions(
     transactions: Transaction[]
