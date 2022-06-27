@@ -78,6 +78,7 @@ export const queryMethodFactory =
           canisterId: canisterId.toString(),
           methodName: fields.methodName,
           arg: bufferToBase64(Buffer.from(blobToUint8Array(fields.arg).buffer)),
+          url: getDomainMetadata().url,
         },
       ],
     });
@@ -116,6 +117,7 @@ export const readStateMethodFactory =
           {
             canisterId: canisterId.toString(),
             paths,
+            url: getDomainMetadata().url,
           },
         ],
       });
