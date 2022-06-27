@@ -63,6 +63,7 @@ export interface CreateActor<T> {
   actor: ActorSubclass<ActorSubclass<T>>;
   canisterId: string;
   interfaceFactory: IDL.InterfaceFactory;
+  host?: string;
 }
   
 export interface RequestBurnXTCParams {
