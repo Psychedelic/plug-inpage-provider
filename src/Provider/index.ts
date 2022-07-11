@@ -1,4 +1,4 @@
-import BrowserRPC from "@fleekhq/browser-rpc/dist/BrowserRPC";
+import BrowserRPC from "@psychedelic/browser-rpc/dist/BrowserRPC";
 import { Agent, Actor, ActorSubclass, PublicKey } from "@dfinity/agent";
 import { Principal } from "@dfinity/principal";
 
