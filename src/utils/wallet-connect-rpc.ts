@@ -1,0 +1,141 @@
+import WalletConnect from "@walletconnect/client";
+
+import { isAndroid, formatIOSMobile } from "@walletconnect/browser-utils";
+import { HttpAgent } from "@dfinity/agent";
+
+import {
+  SIGN_METHODS,
+  DEFAULT_TIMEOUT,
+  WC_MOBILE_REGISTRY_ENTRY,
+  IS_UNLOCK_METHOD,
+} from "../constants/wallet-connect";
+
+class WalletConnectRPC {
+  wcClient: WalletConnect;
+  wcBridgeURL = "https://bridge.walletconnect.org";
+  window: any;
+  focusUri: any;
+  agent: HttpAgent | null = null;
+  isAndroid: boolean = false;
+
+  constructor(window) {
+    this.isAndroid = isAndroid();
+    this.wcClient = new WalletConnect({
+      bridge: this.wcBridgeURL,
+      signingMethods: SIGN_METHODS,
+    });
+    this.window = window;
+  }
+
+  public start() {}
+
+  public call(handler, args, options = { timeout: DEFAULT_TIMEOUT }) {
+    const timeout =
+      typeof options.timeout === "number" ? options.timeout : DEFAULT_TIMEOUT;
+
+    return new Promise((resolve, reject) => {
+      const timeoutFun =
+        timeout > 0
+          ? setTimeout(() => {
+              reject(new Error("Timeout"));
+            }, timeout)
+          : null;
+      const resolveAndClear = (response) => {
+        if (timeoutFun) clearTimeout(timeoutFun);
+        resolve(response);
+      };
+      const rejectAndClear = (error) => {
+        if (timeoutFun) clearTimeout(timeoutFun);
+        reject(error);
+      };
+
+      console.log("CALL", handler, args);
+
+      switch (handler) {
+        case "requestConnect":
+          return this.requestConnect(args, resolveAndClear, rejectAndClear);
+        case "handleError":
+          console.log("ERROR", args);
+          break;
+        case "requestCall":
+          return this.requestCall(args, resolveAndClear, rejectAndClear);
+        default:
+          return this._call(handler, args, resolveAndClear, rejectAndClear);
+      }
+    });
+  }
+
+  private _call(handler, args, resolve, reject) {
+    this.wcClient
+      .sendCustomRequest({
+        method: IS_UNLOCK_METHOD,
+      })
+      .then((isUnlock) => {
+        this.wcClient
+          .sendCustomRequest({
+            method: handler,
+            params: args,
+          })
+          .then((response) => {
+            resolve(response);
+          })
+          .catch((error) => {
+            reject(error);
+          });
+        if (!isUnlock || SIGN_METHODS.includes(handler)) {
+          this.window.location.href = this.focusUri;
+        }
+      })
+      .catch((error) => {
+        reject(error);
+      });
+  }
+
+  private async requestConnect(args, resolve, _reject) {
+    if (this.wcClient.connected) {
+      await this.wcClient.killSession();
+    }
+    await this.wcClient.createSession();
+
+    const href = !this.isAndroid
+      ? formatIOSMobile(this.wcClient.uri, WC_MOBILE_REGISTRY_ENTRY)
+      : this.wcClient.uri;
+    this.focusUri = href.split("?")[0];
+
+    this.wcClient.on("connect", (error, _payload) => {
+      if (error) {
+        throw error;
+      }
+      this.wcClient
+        .sendCustomRequest({
+          method: "requestConnect",
+          params: args,
+        })
+        .then((response) => {
+          resolve(response);
+        });
+    });
+
+    this.window.location.href = href;
+  }
+  private async requestCall(args, resolve, reject) {
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const [_metadata, _args, batchTxId] = args;
+    this.wcClient
+      .sendCustomRequest({
+        method: "requestCall",
+        params: args,
+      })
+      .then((response) => {
+        resolve(response);
+      })
+      .catch((error) => {
+        reject(error);
+      });
+    if (!batchTxId) {
+      this.window.location.href = this.focusUri;
+    }
+  }
+}
+
+export default WalletConnectRPC;
