@@ -1,4 +1,3 @@
-import BrowserRPC from "@psychedelic/browser-rpc/dist/BrowserRPC";
 import { Agent, Actor, ActorSubclass, PublicKey } from "@dfinity/agent";
 import { Principal } from "@dfinity/principal";
 
@@ -25,7 +24,7 @@ import {
   RequestConnectParams,
   RequestImportTokenParams,
   RequestTransferParams,
-  // RequestTransTokenferParams,
+  SimplifiedRPC,
   Transaction,
   TransactionPrevResponse,
 } from "./interfaces";
@@ -44,7 +43,7 @@ export default class Provider implements ProviderInterface {
   private sessionManager: SessionManager;
   private idls: ArgsTypesOfCanister = {};
 
-  constructor(clientRPC: BrowserRPC) {
+  constructor(clientRPC: SimplifiedRPC) {
     this.clientRPC = new RPCManager({ instance: clientRPC });
     this.sessionManager = new SessionManager({ rpc: this.clientRPC });
     this.versions = versions;
@@ -76,7 +75,7 @@ export default class Provider implements ProviderInterface {
       this.clientRPC,
       metadata,
       { whitelist: [canisterId], host: connectionData?.connection?.host },
-      getArgTypes(interfaceFactory),
+      getArgTypes(interfaceFactory)
     );
     return createActor<T>(agent, canisterId, interfaceFactory);
   }
@@ -137,7 +136,7 @@ export default class Provider implements ProviderInterface {
       this.clientRPC,
       metadata,
       { whitelist, host },
-      null,
+      null
     );
 
     return !!this.agent;
@@ -301,7 +300,9 @@ export default class Provider implements ProviderInterface {
     });
   }
 
-  public async requestImportToken(params: RequestImportTokenParams): Promise<any> {
+  public async requestImportToken(
+    params: RequestImportTokenParams
+  ): Promise<any> {
     const metadata = getDomainMetadata();
 
     return await this.clientRPC.call({
@@ -311,14 +312,18 @@ export default class Provider implements ProviderInterface {
   }
 
   private hookToWindowEvents = () => {
-    window.addEventListener('updateConnection', async () => {
-      const connectionData = await this.sessionManager.updateConnection();
-      const { sessionData } = connectionData || {};
-      if (sessionData) {
-        this.agent = sessionData?.agent;
-        this.principalId = sessionData?.principalId;
-        this.accountId = sessionData?.accountId;
-      }
-    }, false);
-  }
+    window.addEventListener(
+      "updateConnection",
+      async () => {
+        const connectionData = await this.sessionManager.updateConnection();
+        const { sessionData } = connectionData || {};
+        if (sessionData) {
+          this.agent = sessionData?.agent;
+          this.principalId = sessionData?.principalId;
+          this.accountId = sessionData?.accountId;
+        }
+      },
+      false
+    );
+  };
 }

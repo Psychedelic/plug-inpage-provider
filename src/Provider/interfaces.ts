@@ -9,7 +9,7 @@ export interface TransactionPrevResponse {
   transactionIndex: number;
   response: any;
 }
-  
+
 export interface Transaction<SuccessResponse = unknown[]> {
   idl: IDL.InterfaceFactory;
   canisterId: string;
@@ -18,24 +18,24 @@ export interface Transaction<SuccessResponse = unknown[]> {
   onSuccess: (res: SuccessResponse) => Promise<any>;
   onFail: (err: any, responses?: TransactionPrevResponse[]) => Promise<void>;
 }
-  
+
 export interface RequestConnectInput {
   canisters?: Principal[];
   timeout?: number;
 }
-  
+
 export interface TimeStamp {
   timestamp_nanos: bigint;
 }
-  
+
 export interface SendOpts {
   fee?: bigint;
   memo?: bigint;
   from_subaccount?: number;
   created_at_time?: TimeStamp;
 }
-  
-  // The amount in e8s (ICPs)
+
+// The amount in e8s (ICPs)
 export interface RequestTransferParams {
   to: string;
   amount: bigint;
@@ -51,13 +51,13 @@ export interface SendOptsToken {
 }
 
 // The amount is a string with comma
-  export interface RequestTransTokenferParams {
-    to: string;
-    strAmount: string;
-    opts?: SendOpts;
-    token?: string;
-  }
-  
+export interface RequestTransTokenferParams {
+  to: string;
+  strAmount: string;
+  opts?: SendOpts;
+  token?: string;
+}
+
 export interface CreateActor<T> {
   agent: HttpAgent;
   actor: ActorSubclass<ActorSubclass<T>>;
@@ -65,12 +65,12 @@ export interface CreateActor<T> {
   interfaceFactory: IDL.InterfaceFactory;
   host?: string;
 }
-  
+
 export interface RequestBurnXTCParams {
   to: string;
   amount: bigint;
 }
-  
+
 export interface RequestConnectParams extends CreateAgentParams {
   timeout?: number;
   onConnectionUpdate?: (data: ConnectionData) => any;
@@ -80,7 +80,7 @@ export interface RequestImportTokenParams {
   canisterId: string;
   standard: string;
 }
-  
+
 export interface ProviderInterfaceVersions {
   provider: string;
   extension: string;
@@ -90,7 +90,7 @@ export interface ICNSInfo {
   names: Array<string>;
   reverseResolvedName?: string;
 }
-  
+
 export interface ProviderInterface {
   isConnected(): Promise<boolean>;
   disconnect(): Promise<void>;

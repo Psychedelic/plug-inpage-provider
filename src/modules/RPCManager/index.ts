@@ -1,4 +1,4 @@
-import BrowserRPC from "@psychedelic/browser-rpc";
+import { SimplifiedRPC } from "../../Provider/interfaces";
 import getDomainMetadata from "../../utils/domain-metadata";
 
 const DEFAULT_CONFIG = {
@@ -7,10 +7,10 @@ const DEFAULT_CONFIG = {
 };
 
 interface RPCManagerOptions {
-  instance: BrowserRPC;
+  instance: SimplifiedRPC;
 }
 export default class RPCManager {
-  private instance: BrowserRPC;
+  private instance: SimplifiedRPC;
   constructor({ instance }: RPCManagerOptions) {
     this.instance = instance;
     this.instance.start();

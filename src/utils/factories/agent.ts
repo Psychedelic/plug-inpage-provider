@@ -71,9 +71,12 @@ export const queryMethodFactory =
     fields: QueryFields,
     identity?: Identity | Promise<Identity>
   ): Promise<QueryResponse> => {
+    const metadata = getDomainMetadata();
+
     const result = await clientRPC.call({
       handler: "requestQuery",
       args: [
+        metadata,
         {
           canisterId: canisterId.toString(),
           methodName: fields.methodName,
@@ -111,9 +114,12 @@ export const readStateMethodFactory =
     );
 
     try {
+      const metadata = getDomainMetadata();
+
       const result = await clientRPC.call({
         handler: "requestReadState",
         args: [
+          metadata,
           {
             canisterId: canisterId.toString(),
             paths,
