@@ -23,6 +23,7 @@ import {
   ProviderInterfaceVersions,
   RequestBurnXTCParams,
   RequestConnectParams,
+  RequestImportTokenParams,
   RequestTransferParams,
   // RequestTransTokenferParams,
   Transaction,
@@ -300,6 +301,15 @@ export default class Provider implements ProviderInterface {
     });
   }
 
+  public async requestImportToken(params: RequestImportTokenParams): Promise<any> {
+    const metadata = getDomainMetadata();
+
+    return await this.clientRPC.call({
+      handler: "requestImportToken",
+      args: [metadata, params],
+    });
+  }
+
   private hookToWindowEvents = () => {
     window.addEventListener('updateConnection', async () => {
       const connectionData = await this.sessionManager.updateConnection();
@@ -309,6 +319,6 @@ export default class Provider implements ProviderInterface {
         this.principalId = sessionData?.principalId;
         this.accountId = sessionData?.accountId;
       }
-   }, false);
+    }, false);
   }
 }
