@@ -1,4 +1,4 @@
-import BrowserRPC from "@fleekhq/browser-rpc";
+import BrowserRPC from "@psychedelic/browser-rpc";
 import getDomainMetadata from "../../utils/domain-metadata";
 
 const DEFAULT_CONFIG = {

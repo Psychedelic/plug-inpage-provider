@@ -75,6 +75,11 @@ export interface RequestConnectParams extends CreateAgentParams {
   timeout?: number;
   onConnectionUpdate?: (data: ConnectionData) => any;
 }
+
+export interface RequestImportTokenParams {
+  canisterId: string;
+  standard: string;
+}
   
 export interface ProviderInterfaceVersions {
   provider: string;
@@ -99,6 +104,7 @@ export interface ProviderInterface {
   }: CreateActor<T>): Promise<ActorSubclass<T>>;
   createAgent(params: CreateAgentParams): Promise<boolean>;
   requestBurnXTC(params: RequestBurnXTCParams): Promise<any>;
+  requestImportToken(params: RequestImportTokenParams): Promise<any>;
   getPrincipal: () => Promise<Principal | string>;
   versions: ProviderInterfaceVersions;
   agent?: Agent | null;
