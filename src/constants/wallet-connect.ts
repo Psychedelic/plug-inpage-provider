@@ -1,6 +1,5 @@
 export const SIGN_METHODS = [
   "requestConnect",
-  "verifyWhitelist",
   "requestTransfer",
   "requestTransferToken",
   "requestBurnXTC",
@@ -17,3 +16,4 @@ export const WC_MOBILE_REGISTRY_ENTRY = {
   deepLink: "wc://",
 };
 export const IS_UNLOCK_METHOD = "isUnlock";
+export const IS_ALL_WHITELISTED_METHOD = "allWhiteListed";

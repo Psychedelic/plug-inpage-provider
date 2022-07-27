@@ -8,6 +8,7 @@ import {
   DEFAULT_TIMEOUT,
   WC_MOBILE_REGISTRY_ENTRY,
   IS_UNLOCK_METHOD,
+  IS_ALL_WHITELISTED_METHOD,
 } from "../constants/wallet-connect";
 
 class WalletConnectRPC {
@@ -49,16 +50,15 @@ class WalletConnectRPC {
         reject(error);
       };
 
-      console.log("CALL", handler, args);
-
       switch (handler) {
         case "requestConnect":
           return this.requestConnect(args, resolveAndClear, rejectAndClear);
         case "handleError":
-          console.log("ERROR", args);
-          break;
+          throw new Error(args[0]);
         case "requestCall":
           return this.requestCall(args, resolveAndClear, rejectAndClear);
+        case "verifyWhitelist":
+          return this.verifyWhitelist(args, resolveAndClear, rejectAndClear);
         default:
           return this._call(handler, args, resolveAndClear, rejectAndClear);
       }
@@ -80,6 +80,7 @@ class WalletConnectRPC {
             resolve(response);
           })
           .catch((error) => {
+            console.log("_call error", error);
             reject(error);
           });
         if (!isUnlock || SIGN_METHODS.includes(handler)) {
@@ -135,6 +136,45 @@ class WalletConnectRPC {
     if (!batchTxId) {
       this.window.location.href = this.focusUri;
     }
+  }
+
+  private async verifyWhitelist(args, resolve, reject) {
+    this.wcClient
+      .sendCustomRequest({
+        method: IS_UNLOCK_METHOD,
+      })
+      .then((isUnlock) => {
+        this.wcClient
+          .sendCustomRequest({
+            method: IS_ALL_WHITELISTED_METHOD,
+            params: args,
+          })
+          .then((allWhiteListed) => {
+            this.wcClient
+              .sendCustomRequest({
+                method: "verifyWhitelist",
+                params: args,
+              })
+              .then((response) => {
+                resolve(response);
+              })
+              .catch((error) => {
+                reject(error);
+              });
+            if (!allWhiteListed) {
+              this.window.location.href = this.focusUri;
+            }
+          })
+          .catch((error) => {
+            reject(error);
+          });
+        if (!isUnlock) {
+          this.window.location.href = this.focusUri;
+        }
+      })
+      .catch((error) => {
+        reject(error);
+      });
   }
 }
 
