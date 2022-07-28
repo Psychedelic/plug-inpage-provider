@@ -54,11 +54,11 @@ class WalletConnectRPC {
         case "requestConnect":
           return this.requestConnect(args, resolveAndClear, rejectAndClear);
         case "handleError":
-          break;
+          throw new Error(args[0]);
         case "requestCall":
           return this.requestCall(args, resolveAndClear, rejectAndClear);
-        case "verifyWhiteList":
-          return this.verifyWhiteList(args, resolveAndClear, rejectAndClear);
+        case "verifyWhitelist":
+          return this.verifyWhitelist(args, resolveAndClear, rejectAndClear);
         default:
           return this._call(handler, args, resolveAndClear, rejectAndClear);
       }
@@ -137,7 +137,7 @@ class WalletConnectRPC {
     }
   }
 
-  private async verifyWhiteList(args, resolve, reject) {
+  private async verifyWhitelist(args, resolve, reject) {
     this.wcClient
       .sendCustomRequest({
         method: IS_UNLOCK_METHOD,
@@ -151,7 +151,7 @@ class WalletConnectRPC {
           .then((allWhiteListed) => {
             this.wcClient
               .sendCustomRequest({
-                method: "verifyWhiteList",
+                method: "verifyWhitelist",
                 params: args,
               })
               .then((response) => {
