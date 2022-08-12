@@ -1,6 +1,6 @@
 import WalletConnect from "@walletconnect/client";
-
 import { isAndroid, formatIOSMobile } from "@walletconnect/browser-utils";
+import { payloadId } from "@walletconnect/jsonrpc-utils";
 import { HttpAgent } from "@dfinity/agent";
 
 import {
@@ -71,8 +71,10 @@ class WalletConnectRPC {
         method: IS_UNLOCK_METHOD,
       })
       .then((isUnlock) => {
+        const requestId = payloadId();
         this.wcClient
           .sendCustomRequest({
+            id: requestId,
             method: handler,
             params: args,
           })
@@ -84,7 +86,7 @@ class WalletConnectRPC {
             reject(error);
           });
         if (!isUnlock || SIGN_METHODS.includes(handler)) {
-          this.window.location.href = this.focusUri;
+          this.window.location.href = `${this.focusUri}&requestId=${requestId}`;
         }
       })
       .catch((error) => {
@@ -122,20 +124,29 @@ class WalletConnectRPC {
   private async requestCall(args, resolve, reject) {
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const [_metadata, _args, batchTxId] = args;
+
     this.wcClient
       .sendCustomRequest({
-        method: "requestCall",
-        params: args,
+        method: IS_UNLOCK_METHOD,
       })
-      .then((response) => {
-        resolve(response);
-      })
-      .catch((error) => {
-        reject(error);
+      .then((isUnlock) => {
+        const requestId = payloadId();
+        this.wcClient
+          .sendCustomRequest({
+            id: requestId,
+            method: "requestCall",
+            params: args,
+          })
+          .then((response) => {
+            resolve(response);
+          })
+          .catch((error) => {
+            reject(error);
+          });
+        if (!batchTxId || !isUnlock) {
+          this.window.location.href = `${this.focusUri}&requestId=${requestId}`;
+        }
       });
-    if (!batchTxId) {
-      this.window.location.href = this.focusUri;
-    }
   }
 
   private async verifyWhitelist(args, resolve, reject) {
@@ -144,14 +155,18 @@ class WalletConnectRPC {
         method: IS_UNLOCK_METHOD,
       })
       .then((isUnlock) => {
+        const whitelistedRequestId = payloadId();
         this.wcClient
           .sendCustomRequest({
+            id: whitelistedRequestId,
             method: IS_ALL_WHITELISTED_METHOD,
             params: args,
           })
           .then((allWhiteListed) => {
+            const verifyRequestId = payloadId();
             this.wcClient
               .sendCustomRequest({
+                id: verifyRequestId,
                 method: "verifyWhitelist",
                 params: args,
               })
@@ -162,14 +177,14 @@ class WalletConnectRPC {
                 reject(error);
               });
             if (!allWhiteListed) {
-              this.window.location.href = this.focusUri;
+              this.window.location.href = `${this.focusUri}&requestId=${verifyRequestId}`;
             }
           })
           .catch((error) => {
             reject(error);
           });
         if (!isUnlock) {
-          this.window.location.href = this.focusUri;
+          this.window.location.href = `${this.focusUri}&requestId=${whitelistedRequestId}`;
         }
       })
       .catch((error) => {
