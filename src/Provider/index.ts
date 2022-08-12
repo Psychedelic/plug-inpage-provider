@@ -1,5 +1,6 @@
 import { Agent, Actor, ActorSubclass, PublicKey } from "@dfinity/agent";
 import { Principal } from "@dfinity/principal";
+import { Buffer } from "buffer/";
 
 import getDomainMetadata from "../utils/domain-metadata";
 import {

@@ -1,14 +1,14 @@
-import { sha256 as jsSha256 } from 'js-sha256';
-import borc from 'borc';
-import { Buffer } from 'buffer/';
+import { sha256 as jsSha256 } from "js-sha256";
+import borc from "borc";
+import { Buffer } from "buffer/";
 import {
   BinaryBlob,
   blobFromBuffer,
   blobFromUint8Array,
   blobToHex,
   lebEncode,
-} from '@dfinity/candid';
-import { Principal } from '@dfinity/principal';
+} from "@dfinity/candid";
+import { Principal } from "@dfinity/principal";
 
 export type RequestId = BinaryBlob & { __requestId__: void };
 /**
@@ -35,9 +35,9 @@ interface ToHashable {
 function hashValue(value: any): BinaryBlob {
   if (value instanceof borc.Tagged) {
     return hashValue((value as borc.Tagged).value);
-  } else if (typeof value === 'string') {
+  } else if (typeof value === "string") {
     return hashString(value);
-  } else if (typeof value === 'number') {
+  } else if (typeof value === "number") {
     return hash(lebEncode(value));
   } else if (Buffer.isBuffer(value)) {
     return hash(blobFromUint8Array(new Uint8Array(value)));
@@ -51,26 +51,31 @@ function hashValue(value: any): BinaryBlob {
   } else if (value._isPrincipal) {
     return hash(blobFromUint8Array(value._arr));
   } else if (
-    typeof value === 'object' &&
+    typeof value === "object" &&
     value !== null &&
-    typeof (value as ToHashable).toHash === 'function'
+    typeof (value as ToHashable).toHash === "function"
   ) {
     return hashValue((value as ToHashable).toHash());
     // TODO This should be move to a specific async method as the webauthn flow required
     // the flow to be synchronous to ensure Safari touch id works.
     // } else if (value instanceof Promise) {
     //   return value.then(x => hashValue(x));
-  } else if (typeof value === 'bigint') {
+  } else if (typeof value === "bigint") {
     // Do this check much later than the other bigint check because this one is much less
     // type-safe.
     // So we want to try all the high-assurance type guards before this 'probable' one.
     return hash(lebEncode(value) as BinaryBlob);
   }
-  throw Object.assign(new Error(`Attempt to hash a value of unsupported type: ${value} of type ${typeof value}`), {
-    // include so logs/callers can understand the confusing value.
-    // (when stringified in error message, prototype info is lost)
-    value,
-  });
+  throw Object.assign(
+    new Error(
+      `Attempt to hash a value of unsupported type: ${value} of type ${typeof value}`
+    ),
+    {
+      // include so logs/callers can understand the confusing value.
+      // (when stringified in error message, prototype info is lost)
+      value,
+    }
+  );
 }
 
 const hashString = (value: string): BinaryBlob => {
@@ -106,9 +111,11 @@ export function requestIdOf(request: Record<string, any>): RequestId {
 
   const traversed: Array<[BinaryBlob, BinaryBlob]> = hashed;
 
-  const sorted: Array<[BinaryBlob, BinaryBlob]> = traversed.sort(([k1], [k2]) => {
-    return Buffer.compare(Buffer.from(k1), Buffer.from(k2));
-  });
+  const sorted: Array<[BinaryBlob, BinaryBlob]> = traversed.sort(
+    ([k1], [k2]) => {
+      return Buffer.compare(Buffer.from(k1), Buffer.from(k2));
+    }
+  );
 
   const concatenated: BinaryBlob = concat(sorted.map(concat));
   const requestId = hash(concatenated) as RequestId;

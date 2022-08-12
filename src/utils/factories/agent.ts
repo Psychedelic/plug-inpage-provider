@@ -14,6 +14,7 @@ import {
   IDL,
 } from "@dfinity/candid";
 import { Principal } from "@dfinity/principal";
+import { Buffer } from "buffer/";
 
 import RPCManager from "../../modules/RPCManager";
 import { recursiveParseBigint } from "../bigint";
@@ -34,7 +35,9 @@ export const callMethodFactory =
     const metadata = getDomainMetadata();
     let decodedArgs = null;
     if (idl) {
-      decodedArgs = recursiveParseBigint(IDL.decode(idl[options.methodName], options.arg));
+      decodedArgs = recursiveParseBigint(
+        IDL.decode(idl[options.methodName], options.arg)
+      );
     }
     const arg = bufferToBase64(
       Buffer.from(blobToUint8Array(options.arg).buffer)
