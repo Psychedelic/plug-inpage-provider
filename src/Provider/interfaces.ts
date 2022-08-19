@@ -123,3 +123,9 @@ export interface SerializedPublicKey {
     data: DerEncodedBlob;
   };
 }
+
+export interface SimplifiedRPC {
+  constructor(): SimplifiedRPC;
+  start(): void;
+  call(handler: string, args: any, options: any): Promise<any>;
+}
