@@ -125,7 +125,6 @@ export interface SerializedPublicKey {
 }
 
 export interface SimplifiedRPC {
-  constructor(): SimplifiedRPC;
   start(): void;
   call(handler: string, args: any, options: any): Promise<any>;
 }

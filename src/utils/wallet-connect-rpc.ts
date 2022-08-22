@@ -11,12 +11,13 @@ import {
   IS_UNLOCK_METHOD,
   IS_ALL_WHITELISTED_METHOD,
 } from "../constants/wallet-connect";
+import { SimplifiedRPC } from "../Provider/interfaces";
 
 if (typeof global.Buffer === "undefined") {
   global.Buffer = Buffer as any;
 }
 
-class WalletConnectRPC {
+class WalletConnectRPC implements SimplifiedRPC {
   wcClient: WalletConnect;
   wcBridgeURL = "https://bridge.walletconnect.org";
   window: any;
@@ -24,7 +25,7 @@ class WalletConnectRPC {
   agent: HttpAgent | null = null;
   isAndroid: boolean = false;
 
-  constructor(window) {
+  constructor(window: Window) {
     this.isAndroid = isAndroid();
     this.wcClient = new WalletConnect({
       bridge: this.wcBridgeURL,
