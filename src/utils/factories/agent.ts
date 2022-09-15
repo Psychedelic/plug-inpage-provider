@@ -68,7 +68,7 @@ export const callMethodFactory =
   };
 
 export const queryMethodFactory =
-  (clientRPC: RPCManager) =>
+  (clientRPC: RPCManager, batchTxId = "") =>
   async (
     canisterId: Principal | string,
     fields: QueryFields,
@@ -106,7 +106,7 @@ export const queryMethodFactory =
   };
 
 export const readStateMethodFactory =
-  (clientRPC: RPCManager) =>
+  (clientRPC: RPCManager, batchTxId = "") =>
   async (
     canisterId: Principal | string,
     fields: ReadStateOptions,

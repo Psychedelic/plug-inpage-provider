@@ -1,5 +1,9 @@
 import WalletConnect from "@walletconnect/client";
-import { isAndroid, formatIOSMobile } from "@walletconnect/browser-utils";
+import {
+  isAndroid,
+  formatIOSMobile,
+  isIOS,
+} from "@walletconnect/browser-utils";
 import { payloadId } from "@walletconnect/jsonrpc-utils";
 import { HttpAgent } from "@dfinity/agent";
 import { Buffer } from "buffer/";
@@ -11,6 +15,7 @@ import {
   IS_ALL_WHITELISTED_METHOD,
 } from "../constants/wallet-connect";
 import { SimplifiedRPC } from "../Provider/interfaces";
+import SignerServer from "./signer-server";
 
 if (typeof global.Buffer === "undefined") {
   global.Buffer = Buffer as any;
@@ -23,10 +28,12 @@ class WalletConnectRPC implements SimplifiedRPC {
   focusUri: any;
   agent: HttpAgent | null = null;
   isAndroid: boolean = false;
+  isApple: boolean = false;
   debug: boolean;
 
   constructor(window: Window, debug = true) {
     this.isAndroid = isAndroid();
+    this.isApple = isIOS();
     this.wcClient = new WalletConnect({
       bridge: this.wcBridgeURL,
       signingMethods: SIGN_METHODS,
@@ -64,6 +71,10 @@ class WalletConnectRPC implements SimplifiedRPC {
           throw new Error(args[1]);
         case "requestCall":
           return this.requestCall(args, resolveAndClear, rejectAndClear);
+        case "requestQuery":
+          return this.requestQuery(args, resolveAndClear, rejectAndClear);
+        case "requestReadState":
+          return this.requestReadState(args, resolveAndClear, rejectAndClear);
         case "verifyWhitelist":
           return this.verifyWhitelist(args, resolveAndClear, rejectAndClear);
         default:
@@ -131,6 +142,8 @@ class WalletConnectRPC implements SimplifiedRPC {
     const [_metadata, _args, batchTxId] = args;
     this.debug && console.log("requestingCall isUnlock");
     // this.debug && console.log("requestedCall isUnlock", isUnlock);
+    if (this.isApple && batchTxId)
+      return SignerServer.requestCall(args, resolve, reject);
     const requestId = payloadId();
     this.debug && console.log("requestingCall");
     this.wcClient
@@ -150,6 +163,28 @@ class WalletConnectRPC implements SimplifiedRPC {
     if (!batchTxId) {
       this.window.location.href = `${this.focusUri}?requestId=${requestId}`;
     }
+  }
+
+  private async requestQuery(args, resolve, reject) {
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const [_metadata, _args, batchTxId] = args;
+    this.debug && console.log("requestingCall isUnlock");
+    // this.debug && console.log("requestedCall isUnlock", isUnlock);
+    if (this.isApple && batchTxId)
+      return SignerServer.requestQuery(args, resolve, reject);
+
+    this._call("requestQuery", args, resolve, reject);
+  }
+
+  private async requestReadState(args, resolve, reject) {
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const [_metadata, _args, batchTxId] = args;
+    this.debug && console.log("requestingCall isUnlock");
+    // this.debug && console.log("requestedCall isUnlock", isUnlock);
+    if (this.isApple && batchTxId)
+      return SignerServer.requestReadState(args, resolve, reject);
+
+    this._call("requestReadState", args, resolve, reject);
   }
 
   private async verifyWhitelist(args, resolve, reject) {

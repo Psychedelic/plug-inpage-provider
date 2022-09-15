@@ -42,20 +42,20 @@ class PlugAgent extends HttpAgent {
   ) {
     super(options);
 
-    this["query"] = queryMethodFactory(clientRPC);
+    this["query"] = queryMethodFactory(clientRPC, batchTxId);
     this["call"] = callMethodFactory(clientRPC, batchTxId, idl);
-    this["readState"] = readStateMethodFactory(clientRPC);
+    this["readState"] = readStateMethodFactory(clientRPC, batchTxId);
   }
 }
 
 interface PrivateCreateAgentParams {
   publicKey: SerializedPublicKey;
   clientRPC: any;
-  idl?: { [key: string]: any} | null;
+  idl?: { [key: string]: any } | null;
   batchTxId?: string;
   whitelist?: Array<string>;
-  host?:string;
-};
+  host?: string;
+}
 
 export const privateCreateAgent = async ({
   publicKey,
@@ -74,7 +74,7 @@ export const privateCreateAgent = async ({
     },
     clientRPC,
     idl,
-    batchTxId,
+    batchTxId
   );
   if (!IC_MAINNET_URLS.includes(host)) {
     await agent.fetchRootKey();
