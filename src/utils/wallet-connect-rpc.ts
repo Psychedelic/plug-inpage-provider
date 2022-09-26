@@ -198,7 +198,7 @@ class WalletConnectRPC implements SimplifiedRPC {
         method: IS_ALL_WHITELISTED_METHOD,
         params: args,
       })
-      .then((allWhiteListed) => {
+      .then(({ allWhiteListed, publicKey }) => {
         this.debug &&
           console.log("verifyingWhitelist allWhitelisted", allWhiteListed);
         if (!allWhiteListed) {
@@ -220,7 +220,7 @@ class WalletConnectRPC implements SimplifiedRPC {
             });
           this.window.location.href = `${this.focusUri}?requestId=${verifyRequestId}`;
         } else {
-          resolve(allWhiteListed);
+          resolve(publicKey);
         }
       })
       .catch((error) => {
