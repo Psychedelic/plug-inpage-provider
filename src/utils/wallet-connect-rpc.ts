@@ -77,6 +77,8 @@ class WalletConnectRPC implements SimplifiedRPC {
           return this.requestReadState(args, resolveAndClear, rejectAndClear);
         case "verifyWhitelist":
           return this.verifyWhitelist(args, resolveAndClear, rejectAndClear);
+        case "disconnect":
+          return this.disconnect(args, resolveAndClear, rejectAndClear);
         default:
           return this._call(handler, args, resolveAndClear, rejectAndClear);
       }
@@ -107,7 +109,7 @@ class WalletConnectRPC implements SimplifiedRPC {
     }
   }
 
-  private async requestConnect(args, resolve, _reject) {
+  private async requestConnect(args, resolve, reject) {
     if (this.wcClient.connected) {
       await this.wcClient.killSession();
     }
@@ -120,6 +122,16 @@ class WalletConnectRPC implements SimplifiedRPC {
 
     const requestId = payloadId();
 
+    this.wcClient.on("disconnect", (_error, payload) => {
+      this.debug && console.log("disconnect", payload);
+
+      this.clearClient();
+
+      const [error] = payload.params;
+
+      reject(error);
+    });
+
     this.wcClient.on("connect", (error, _payload) => {
       if (error) {
         throw error;
@@ -131,6 +143,7 @@ class WalletConnectRPC implements SimplifiedRPC {
           params: args,
         })
         .then((response) => {
+          this.wcClient.off("disconnect");
           resolve(response);
         });
     });
@@ -227,6 +240,36 @@ class WalletConnectRPC implements SimplifiedRPC {
         this.debug && console.log("verifyingWhitelist allWhitelisted", error);
         reject(error);
       });
+  }
+
+  private async disconnect(args, resolve, reject) {
+    this.clearClient();
+
+    this.wcClient
+      .sendCustomRequest({
+        method: "disconnect",
+        params: args,
+      })
+      .then((res) => {
+        console.log("disconnect full", res);
+        resolve();
+      })
+      .catch((err) => {
+        console.log("disconnect reject", err);
+        reject(err);
+      });
+  }
+
+  private clearClient() {
+    this.wcClient.off("disconnect");
+    this.wcClient.off("connect");
+
+    this.wcClient.killSession();
+
+    this.wcClient = new WalletConnect({
+      bridge: this.wcBridgeURL,
+      signingMethods: SIGN_METHODS,
+    });
   }
 }
 
