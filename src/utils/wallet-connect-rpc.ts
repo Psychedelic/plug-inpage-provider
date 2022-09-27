@@ -264,8 +264,6 @@ class WalletConnectRPC implements SimplifiedRPC {
     this.wcClient.off("disconnect");
     this.wcClient.off("connect");
 
-    this.wcClient.killSession();
-
     this.wcClient = new WalletConnect({
       bridge: this.wcBridgeURL,
       signingMethods: SIGN_METHODS,
