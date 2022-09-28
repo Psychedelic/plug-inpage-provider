@@ -128,3 +128,8 @@ export interface SimplifiedRPC {
   start(): void;
   call(handler: string, args: any, options: any): Promise<any>;
 }
+
+export interface WalletConnectOptions {
+  window: Window;
+  debug?: boolean;
+}

@@ -86,6 +86,7 @@ export const queryMethodFactory =
           arg: bufferToBase64(Buffer.from(blobToUint8Array(fields.arg).buffer)),
           url: getDomainMetadata().url,
         },
+        batchTxId,
       ],
     });
 
@@ -128,6 +129,7 @@ export const readStateMethodFactory =
             paths,
             url: getDomainMetadata().url,
           },
+          batchTxId,
         ],
       });
 

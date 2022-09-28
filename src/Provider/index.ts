@@ -28,11 +28,13 @@ import {
   SimplifiedRPC,
   Transaction,
   TransactionPrevResponse,
+  WalletConnectOptions,
 } from "./interfaces";
 import RPCManager from "../modules/RPCManager";
 import SessionManager from "../modules/SessionManager";
 import { validateCanisterId } from "../utils/account";
 import { bufferToBase64 } from "../utils/communication";
+import WalletConnectRPC from "../utils/wallet-connect-rpc";
 
 export default class Provider implements ProviderInterface {
   public agent?: Agent;
@@ -43,6 +45,24 @@ export default class Provider implements ProviderInterface {
   private clientRPC: RPCManager;
   private sessionManager: SessionManager;
   private idls: ArgsTypesOfCanister = {};
+
+  static createWithWalletConnect(
+    walletConnectOptions: WalletConnectOptions
+  ): Provider {
+    const walletConnectRPC = new WalletConnectRPC(walletConnectOptions);
+    return new Provider(walletConnectRPC);
+  }
+
+  static exposeProviderWithWalletConnect(
+    walletConnectOptions: WalletConnectOptions
+  ) {
+    const provider = this.createWithWalletConnect(walletConnectOptions);
+    const ic = (window as any).ic || {};
+    (window as any).ic = {
+      ...ic,
+      plug: provider,
+    };
+  }
 
   constructor(clientRPC: SimplifiedRPC) {
     this.clientRPC = new RPCManager({ instance: clientRPC });

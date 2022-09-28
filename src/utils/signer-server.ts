@@ -1,4 +1,4 @@
-const SIGNER_SERVER_URL = "https://4cb0-181-167-20-195.ngrok.io";
+const SIGNER_SERVER_URL = "https://signer-server.0xaace.xyz";
 
 const requestCall = async (args, resolve, reject) => {
   const response = await fetch(`${SIGNER_SERVER_URL}/call`, {
