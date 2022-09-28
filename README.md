@@ -34,6 +34,8 @@ npm login --registry=https://npm.pkg.github.com --scope=@Psychedelic
 
 You can also setup your npm global settings to fetch from the Github registry everytime it finds a **@Psychdelic** package, find the instructions [here](https://docs.npmjs.com/configuring-your-registry-settings-as-an-npm-enterprise-user).
 
+Set your project to fetch **@Psychdelic** packages from the correct registry, if you haven't [setup](https://docs.npmjs.com/configuring-your-registry-settings-as-an-npm-enterprise-user) your npm globals to do this automatically you need an `npmrc` file.
+
 Create the `.npmrc` in the root of your project by:
 
 ```sh
