@@ -12,9 +12,12 @@ import {
   SIGN_METHODS,
   DEFAULT_TIMEOUT,
   WC_MOBILE_REGISTRY_ENTRY,
-  IS_ALL_WHITELISTED_METHOD,
 } from "../constants/wallet-connect";
-import { SimplifiedRPC, WalletConnectOptions } from "../Provider/interfaces";
+import {
+  SerializedPublicKey,
+  SimplifiedRPC,
+  WalletConnectOptions,
+} from "../Provider/interfaces";
 import SignerServer from "./signer-server";
 
 if (typeof global.Buffer === "undefined") {
@@ -30,6 +33,8 @@ class WalletConnectRPC implements SimplifiedRPC {
   isAndroid: boolean = false;
   isApple: boolean = false;
   debug: boolean;
+  whitelist: string[] = [];
+  publicKey: SerializedPublicKey | null = null;
 
   constructor(walletConnectOptions: WalletConnectOptions) {
     const { window, debug = true } = walletConnectOptions;
@@ -137,7 +142,7 @@ class WalletConnectRPC implements SimplifiedRPC {
 
     this.wcClient.on("connect", (error, _payload) => {
       if (error) {
-        throw error;
+        reject(error);
       }
       this.wcClient
         .sendCustomRequest({
@@ -147,7 +152,14 @@ class WalletConnectRPC implements SimplifiedRPC {
         })
         .then((response) => {
           this.wcClient.off("disconnect");
-          resolve(response);
+          const { publicKey, whitelist } = response;
+          this.addToWhiteList(whitelist);
+          this.publicKey = publicKey;
+          resolve(publicKey);
+        })
+        .catch((error) => {
+          console.log("REQUEST CONNECT ERROR", error, error.message);
+          reject(error);
         });
     });
 
@@ -209,44 +221,34 @@ class WalletConnectRPC implements SimplifiedRPC {
   }
 
   private async verifyWhitelist(args, resolve, reject) {
-    const whitelistedRequestId = payloadId();
     this.debug && console.log("going to verifyingWhitelist allWhitelisted");
+    const allWhiteListed = this.isAllWhiteListed(args[1]);
+    if (allWhiteListed) {
+      resolve(this.publicKey);
+      return;
+    }
+    this.debug &&
+      console.log("verifyingWhitelist allWhitelisted", allWhiteListed);
+    const verifyRequestId = payloadId();
+    this.debug && console.log("going to verifyingWhitelist");
     this.wcClient
       .sendCustomRequest({
-        id: whitelistedRequestId,
-        method: IS_ALL_WHITELISTED_METHOD,
+        id: verifyRequestId,
+        method: "verifyWhitelist",
         params: args,
       })
-      .then(({ allWhiteListed, publicKey }) => {
-        this.debug &&
-          console.log("verifyingWhitelist allWhitelisted", allWhiteListed);
-        if (!allWhiteListed) {
-          const verifyRequestId = payloadId();
-          this.debug && console.log("going to verifyingWhitelist");
-          this.wcClient
-            .sendCustomRequest({
-              id: verifyRequestId,
-              method: "verifyWhitelist",
-              params: args,
-            })
-            .then((response) => {
-              this.debug && console.log("verifyedWhitelist", response);
-              resolve(response);
-            })
-            .catch((error) => {
-              this.debug && console.log("verifyedWhitelist error", error);
-              reject(error);
-            });
-          this.window.location.href = `${this.focusUri}?requestId=${verifyRequestId}`;
-        } else {
-          resolve(publicKey);
-        }
+      .then((response) => {
+        this.debug && console.log("verifyedWhitelist", response);
+        const { publicKey, whitelist } = response;
+        this.addToWhiteList(whitelist);
+        this.publicKey = publicKey;
+        resolve(publicKey);
       })
       .catch((error) => {
-        this.debug &&
-          console.log("verifyingWhitelist allWhitelisted error", error);
+        this.debug && console.log("verifyedWhitelist error", error);
         reject(error);
       });
+    this.window.location.href = `${this.focusUri}?requestId=${verifyRequestId}`;
   }
 
   private async disconnect(args, resolve, reject) {
@@ -272,6 +274,18 @@ class WalletConnectRPC implements SimplifiedRPC {
     this.wcClient = new WalletConnect({
       bridge: this.wcBridgeURL,
       signingMethods: SIGN_METHODS,
+    });
+  }
+
+  private isAllWhiteListed(newWhiteList: string[]) {
+    return newWhiteList.every((element) => this.whitelist.includes(element));
+  }
+
+  private addToWhiteList(newWhiteList: string[]) {
+    newWhiteList.forEach((element) => {
+      if (!this.whitelist.includes(element)) {
+        this.whitelist.push(element);
+      }
     });
   }
 }
