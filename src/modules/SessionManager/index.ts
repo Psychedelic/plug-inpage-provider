@@ -105,7 +105,7 @@ export default class SessionManager {
 
     await this.rpc.call({
       handler: "disconnect",
-      args: [metadata.url],
+      args: [metadata.url, this.sessionData?.principalId],
     });
     this.sessionData = null;
   }
