@@ -119,7 +119,7 @@ class WalletConnectRPC implements SimplifiedRPC {
 
   private async requestConnect(args, resolve, reject) {
     if (this.wcClient.connected) {
-      await this.wcClient.killSession();
+      await this.clearClient();
     }
     await this.wcClient.createSession();
 
@@ -130,10 +130,10 @@ class WalletConnectRPC implements SimplifiedRPC {
 
     const requestId = payloadId();
 
-    this.wcClient.on("disconnect", (_error, payload) => {
+    this.wcClient.on("disconnect", async (_error, payload) => {
       this.debug && console.log("disconnect", payload);
 
-      this.clearClient();
+      await this.clearClient();
 
       const [error] = payload.params;
 
@@ -159,7 +159,7 @@ class WalletConnectRPC implements SimplifiedRPC {
         })
         .catch((error) => {
           console.log("REQUEST CONNECT ERROR", error, error.message);
-          reject(error);
+          this.clearClient().then(() => reject(error));
         });
     });
 
@@ -252,7 +252,7 @@ class WalletConnectRPC implements SimplifiedRPC {
   }
 
   private async disconnect(args, resolve, reject) {
-    this.clearClient();
+    await this.clearClient();
 
     this.wcClient
       .sendCustomRequest({
@@ -267,9 +267,12 @@ class WalletConnectRPC implements SimplifiedRPC {
       });
   }
 
-  private clearClient() {
+  private async clearClient() {
     this.wcClient.off("disconnect");
     this.wcClient.off("connect");
+    if (this.wcClient.connected) {
+      await this.wcClient.killSession();
+    }
 
     this.wcClient = new WalletConnect({
       bridge: this.wcBridgeURL,
