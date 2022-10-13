@@ -131,7 +131,7 @@ class WalletConnectRPC implements SimplifiedRPC {
     const requestId = payloadId();
 
     this.wcClient.on("disconnect", async (_error, payload) => {
-      this.debug && console.log("disconnect", payload);
+      this.debug && console.log("on disconnect", payload);
 
       await this.clearClient();
 
@@ -140,7 +140,8 @@ class WalletConnectRPC implements SimplifiedRPC {
       reject(error);
     });
 
-    this.wcClient.on("connect", (error, _payload) => {
+    this.wcClient.on("connect", (error, payload) => {
+      this.debug && console.log("on connect", payload);
       if (error) {
         reject(error);
       }

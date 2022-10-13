@@ -12,7 +12,7 @@ export const WC_MOBILE_REGISTRY_ENTRY = {
   shortName: "Plug",
   color: "Rainbow",
   logo: "",
-  universalLink: "https://plugwallet.ooo",
+  universalLink: "plug://plugwallet.ooo",
   deepLink: "wc://",
 };
 export const IS_UNLOCK_METHOD = "isUnlock";
