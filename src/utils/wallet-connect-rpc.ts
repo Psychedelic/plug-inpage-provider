@@ -65,6 +65,7 @@ class WalletConnectRPC implements SimplifiedRPC {
               reject(new Error("Timeout"));
             }, timeout)
           : null;
+
       const resolveAndClear = (response) => {
         if (timeoutFun) clearTimeout(timeoutFun);
         resolve(response);
@@ -89,14 +90,25 @@ class WalletConnectRPC implements SimplifiedRPC {
           return this.verifyWhitelist(args, resolveAndClear, rejectAndClear);
         case "disconnect":
           return this.disconnect(args, resolveAndClear, rejectAndClear);
+        case "batchTransactions":
+          return this.batchTransactions(args, resolveAndClear, rejectAndClear);
         default:
           return this._call(handler, args, resolveAndClear, rejectAndClear);
       }
     });
   }
 
+  public async resetSession() {
+    await this.clearClient();
+    await this.wcClient.createSession();
+  }
+
   private _call(handler, args, resolve, reject) {
     const requestId = payloadId();
+    if (SIGN_METHODS.includes(handler)) {
+      this.window.location.href = `${this.focusUri}?requestId=${requestId}`;
+    }
+
     this.debug && console.log("going to _calling", handler);
     this.wcClient
       .sendCustomRequest({
@@ -112,23 +124,16 @@ class WalletConnectRPC implements SimplifiedRPC {
         this.debug && console.log("_called error", handler, error);
         reject(error);
       });
-    if (SIGN_METHODS.includes(handler)) {
-      this.window.location.href = `${this.focusUri}?requestId=${requestId}`;
-    }
   }
 
   private async requestConnect(args, resolve, reject) {
-    if (this.wcClient.connected) {
-      await this.clearClient();
-    }
-    await this.wcClient.createSession();
-
     const href = !this.isAndroid
       ? formatIOSMobile(this.wcClient.uri, WC_MOBILE_REGISTRY_ENTRY)
       : this.wcClient.uri;
     this.focusUri = href.split("?")[0];
 
     const requestId = payloadId();
+    this.window.location.href = `${href}&requestId=${requestId}`;
 
     this.wcClient.on("disconnect", async (_error, payload) => {
       this.debug && console.log("on disconnect", payload);
@@ -136,7 +141,6 @@ class WalletConnectRPC implements SimplifiedRPC {
       await this.clearClient();
 
       const [error] = payload.params;
-
       reject(error);
     });
 
@@ -145,6 +149,7 @@ class WalletConnectRPC implements SimplifiedRPC {
       if (error) {
         reject(error);
       }
+
       this.wcClient
         .sendCustomRequest({
           id: requestId,
@@ -163,19 +168,21 @@ class WalletConnectRPC implements SimplifiedRPC {
           this.clearClient().then(() => reject(error));
         });
     });
-
-    this.window.location.href = `${href}&requestId=${requestId}`;
   }
   private async requestCall(args, resolve, reject) {
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const [_metadata, _args, batchTxId] = args;
-    console.log("requestCall", batchTxId);
+
+    const requestId = payloadId();
+    if (!batchTxId) {
+      this.window.location.href = `${this.focusUri}?requestId=${requestId}`;
+    }
 
     if (this.isApple && batchTxId) {
       this.debug && console.log("isApple requestCall by SignerServer");
       return SignerServer.requestCall(args, resolve, reject);
     }
-    const requestId = payloadId();
+
     this.debug && console.log("requestingCall");
     this.wcClient
       .sendCustomRequest({
@@ -191,16 +198,11 @@ class WalletConnectRPC implements SimplifiedRPC {
         this.debug && console.log("requestedCall", error);
         reject(error);
       });
-    if (!batchTxId) {
-      this.window.location.href = `${this.focusUri}?requestId=${requestId}`;
-    }
   }
 
   private async requestQuery(args, resolve, reject) {
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const [_metadata, _args, batchTxId] = args;
-    console.log("requestQuery", batchTxId);
-
     if (this.isApple && batchTxId) {
       this.debug && console.log("isApple requestQuery by SignerServer");
       return SignerServer.requestQuery(args, resolve, reject);
@@ -212,7 +214,6 @@ class WalletConnectRPC implements SimplifiedRPC {
   private async requestReadState(args, resolve, reject) {
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const [_metadata, _args, batchTxId] = args;
-    console.log("requestReadState", batchTxId);
     if (this.isApple && batchTxId) {
       this.debug && console.log("isApple requestReadState by SignerServer");
       return SignerServer.requestReadState(args, resolve, reject);
@@ -228,9 +229,13 @@ class WalletConnectRPC implements SimplifiedRPC {
       resolve(this.publicKey);
       return;
     }
-    this.debug &&
-      console.log("verifyingWhitelist allWhitelisted", allWhiteListed);
+
     const verifyRequestId = payloadId();
+    this.window.location.href = `${this.focusUri}?requestId=${verifyRequestId}`;
+
+    this.debug &&
+    console.log("verifyingWhitelist allWhitelisted", allWhiteListed);
+
     this.debug && console.log("going to verifyingWhitelist");
     this.wcClient
       .sendCustomRequest({
@@ -249,7 +254,6 @@ class WalletConnectRPC implements SimplifiedRPC {
         this.debug && console.log("verifyedWhitelist error", error);
         reject(error);
       });
-    this.window.location.href = `${this.focusUri}?requestId=${verifyRequestId}`;
   }
 
   private async disconnect(args, resolve, reject) {
@@ -290,6 +294,27 @@ class WalletConnectRPC implements SimplifiedRPC {
       if (!this.whitelist.includes(element)) {
         this.whitelist.push(element);
       }
+    });
+  }
+
+  private async batchTransactions(args, resolve, reject) {
+    const requestId = payloadId();
+
+    this.window.location.href = `${this.focusUri}?requestId=${requestId}`;
+
+    this.wcClient.sendCustomRequest({
+      id: requestId,
+      method: "batchTransactions",
+      params: args,
+    }).then((response) => {
+      this.debug && console.log("batchTransactions", response);
+      const { whitelist, ...result } = response;
+      this.addToWhiteList(whitelist);
+      resolve(result);
+    })
+    .catch((error) => {
+      this.debug && console.log("batchTransactions error", error);
+      reject(error);
     });
   }
 }

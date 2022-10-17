@@ -50,6 +50,7 @@ export default class Provider implements ProviderInterface {
     walletConnectOptions: WalletConnectOptions
   ): Provider {
     const walletConnectRPC = new WalletConnectRPC(walletConnectOptions);
+    walletConnectRPC.resetSession();
     return new Provider(walletConnectRPC);
   }
 
@@ -57,6 +58,7 @@ export default class Provider implements ProviderInterface {
     walletConnectOptions: WalletConnectOptions
   ) {
     const provider = this.createWithWalletConnect(walletConnectOptions);
+
     const ic = (window as any).ic || {};
     (window as any).ic = {
       ...ic,
