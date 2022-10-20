@@ -138,7 +138,7 @@ class WalletConnectRPC implements SimplifiedRPC {
     this.wcClient.on("disconnect", async (_error, payload) => {
       this.debug && console.log("on disconnect", payload);
 
-      await this.clearClient();
+      await this.resetSession();
 
       const [error] = payload.params;
       reject(error);
@@ -163,9 +163,9 @@ class WalletConnectRPC implements SimplifiedRPC {
           this.publicKey = publicKey;
           resolve(publicKey);
         })
-        .catch((error) => {
-          console.log("REQUEST CONNECT ERROR", error, error.message);
-          this.clearClient().then(() => reject(error));
+        .catch(async (error) => {
+          await this.resetSession();
+          reject(error);
         });
     });
   }
@@ -257,8 +257,6 @@ class WalletConnectRPC implements SimplifiedRPC {
   }
 
   private async disconnect(args, resolve, reject) {
-    await this.clearClient();
-
     this.wcClient
       .sendCustomRequest({
         method: "disconnect",
@@ -270,6 +268,8 @@ class WalletConnectRPC implements SimplifiedRPC {
       .catch((err) => {
         reject(err);
       });
+
+      await this.resetSession();
   }
 
   private async clearClient() {
