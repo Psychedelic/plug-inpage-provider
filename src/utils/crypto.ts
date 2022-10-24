@@ -1,7 +1,8 @@
 /* eslint-disable no-prototype-builtins */
 /* eslint-disable no-bitwise */
-import crc32 from 'buffer-crc32';
-import CryptoJS from 'crypto-js';
+import crc32 from "buffer-crc32";
+import CryptoJS from "crypto-js";
+import { Buffer } from "buffer/";
 
 export const byteArrayToWordArray = (byteArray: Uint8Array) => {
   const wordArray = [] as any;
@@ -10,10 +11,7 @@ export const byteArrayToWordArray = (byteArray: Uint8Array) => {
     wordArray[(i / 4) | 0] |= byteArray[i] << (24 - 8 * i);
   }
   // eslint-disable-next-line
-  const result = CryptoJS.lib.WordArray.create(
-    wordArray,
-    byteArray.length
-  );
+  const result = CryptoJS.lib.WordArray.create(wordArray, byteArray.length);
   return result;
 };
 
@@ -30,8 +28,8 @@ export const wordToByteArray = (word, length): number[] => {
 
 export const wordArrayToByteArray = (wordArray, length) => {
   if (
-    wordArray.hasOwnProperty('sigBytes') &&
-    wordArray.hasOwnProperty('words')
+    wordArray.hasOwnProperty("sigBytes") &&
+    wordArray.hasOwnProperty("words")
   ) {
     length = wordArray.sigBytes;
     wordArray = wordArray.words;
@@ -56,5 +54,5 @@ export const intToHex = (val: number) =>
 export const generateChecksum = (hash: Uint8Array) => {
   const crc = crc32.unsigned(Buffer.from(hash));
   const hex = intToHex(crc);
-  return hex.padStart(8, '0');
+  return hex.padStart(8, "0");
 };

@@ -14,6 +14,7 @@ import {
   IDL,
 } from "@dfinity/candid";
 import { Principal } from "@dfinity/principal";
+import { Buffer } from "buffer/";
 
 import RPCManager from "../../modules/RPCManager";
 import { recursiveParseBigint } from "../bigint";
@@ -34,7 +35,9 @@ export const callMethodFactory =
     const metadata = getDomainMetadata();
     let decodedArgs = null;
     if (idl) {
-      decodedArgs = recursiveParseBigint(IDL.decode(idl[options.methodName], options.arg));
+      decodedArgs = recursiveParseBigint(
+        IDL.decode(idl[options.methodName], options.arg)
+      );
     }
     const arg = bufferToBase64(
       Buffer.from(blobToUint8Array(options.arg).buffer)
@@ -65,21 +68,25 @@ export const callMethodFactory =
   };
 
 export const queryMethodFactory =
-  (clientRPC: RPCManager) =>
+  (clientRPC: RPCManager, batchTxId = "") =>
   async (
     canisterId: Principal | string,
     fields: QueryFields,
     identity?: Identity | Promise<Identity>
   ): Promise<QueryResponse> => {
+    const metadata = getDomainMetadata();
+
     const result = await clientRPC.call({
       handler: "requestQuery",
       args: [
+        metadata,
         {
           canisterId: canisterId.toString(),
           methodName: fields.methodName,
           arg: bufferToBase64(Buffer.from(blobToUint8Array(fields.arg).buffer)),
           url: getDomainMetadata().url,
         },
+        batchTxId,
       ],
     });
 
@@ -100,7 +107,7 @@ export const queryMethodFactory =
   };
 
 export const readStateMethodFactory =
-  (clientRPC: RPCManager) =>
+  (clientRPC: RPCManager, batchTxId = "") =>
   async (
     canisterId: Principal | string,
     fields: ReadStateOptions,
@@ -111,14 +118,18 @@ export const readStateMethodFactory =
     );
 
     try {
+      const metadata = getDomainMetadata();
+
       const result = await clientRPC.call({
         handler: "requestReadState",
         args: [
+          metadata,
           {
             canisterId: canisterId.toString(),
             paths,
             url: getDomainMetadata().url,
           },
+          batchTxId,
         ],
       });
 

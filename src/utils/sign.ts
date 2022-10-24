@@ -63,7 +63,10 @@ export const getSignInfoFromTransaction = (
   };
 };
 
-export const decodeArgs = (signInfo: SignInfo, argsTypes: ArgsTypesOfCanister) => {
+export const decodeArgs = (
+  signInfo: SignInfo,
+  argsTypes: ArgsTypesOfCanister
+) => {
   if (canDecodeArgs(signInfo, argsTypes)) {
     const assuredSignInfo = signInfo as AssuredSignInfo;
     const funArgumentsTypes =

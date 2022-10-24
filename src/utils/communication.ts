@@ -1,3 +1,5 @@
+import { Buffer } from "buffer/";
+
 export const bufferToBase64 = (buf: Buffer): string => {
   return Buffer.from(buf).toString("base64");
 };

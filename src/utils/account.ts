@@ -1,5 +1,6 @@
 import CryptoJS from "crypto-js";
 import { Principal } from "@dfinity/principal";
+import { Buffer } from "buffer/";
 
 import {
   byteArrayToWordArray,
@@ -25,7 +26,7 @@ export const getAccountId = (
   sha.update(byteArrayToWordArray(principal.toUint8Array()));
   const subBuffer = Buffer.from(SUB_ACCOUNT_ZERO);
   if (subAccount) {
-    subBuffer.writeUInt32BE(subAccount);
+    subBuffer.writeUInt32BE(subAccount, 0);
   }
   sha.update(byteArrayToWordArray(subBuffer));
   const hash = sha.finalize();
