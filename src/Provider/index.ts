@@ -1,7 +1,7 @@
 import { Agent, Actor, ActorSubclass, PublicKey } from "@dfinity/agent";
 import { Principal } from "@dfinity/principal";
 import { Buffer } from "buffer/";
-import { BinaryBlob, blobToUint8Array } from "@dfinity/candid";
+import { BinaryBlob, blobToHex } from "@dfinity/candid";
 
 
 import getDomainMetadata from "../utils/domain-metadata";
@@ -47,6 +47,7 @@ export default class Provider implements ProviderInterface {
   private clientRPC: RPCManager;
   private sessionManager: SessionManager;
   private idls: ArgsTypesOfCanister = {};
+  private sarasa: string;
 
   static createWithWalletConnect(
     walletConnectOptions: WalletConnectOptions
@@ -72,6 +73,7 @@ export default class Provider implements ProviderInterface {
     this.clientRPC = new RPCManager({ instance: clientRPC });
     this.sessionManager = new SessionManager({ rpc: this.clientRPC });
     this.versions = versions;
+    this.sarasa = 'sarasa';
   }
 
   public async init() {
@@ -352,19 +354,26 @@ export default class Provider implements ProviderInterface {
     );
   };
 
-  public async signMessage(message: BinaryBlob): Promise<BinaryBlob> {
+  private parseMessageToString = (message: BinaryBlob | Buffer | ArrayBuffer) => {
+    if (message instanceof Buffer) {
+      return bufferToBase64(message);
+    }
+    if (message instanceof ArrayBuffer) {
+      return bufferToBase64(Buffer.from(message));
+    }
+    return blobToHex(message);
+  }
+
+  public async signMessage(message: BinaryBlob | Buffer | ArrayBuffer): Promise<BinaryBlob> {
     
     const metadata = getDomainMetadata();
-    const base64Message = bufferToBase64(
-      Buffer.from(blobToUint8Array(message).buffer)
-    );
-    
+    const messageToSign = this.parseMessageToString(message);
     const response = await this.clientRPC.call({
-      handler: "signMessage",
-      args: [metadata, base64Message],
+      handler: "requestSignMessage",
+      args: [metadata, messageToSign],
     });
-
+    console.log(response)
     return response;
-    
+
   }
 }
