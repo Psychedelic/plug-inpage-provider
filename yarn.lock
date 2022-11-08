@@ -5230,6 +5230,11 @@ test-exclude@^6.0.0:
     glob "^7.1.4"
     minimatch "^3.0.4"
 
+text-encoding-shim@^1.0.5:
+  version "1.0.5"
+  resolved "https://registry.yarnpkg.com/text-encoding-shim/-/text-encoding-shim-1.0.5.tgz#dfd9cde8dbbffe0c52be2fc277a6a65c66d23e41"
+  integrity sha512-H7yYW+jRn4yhu60ygZ2f/eMhXPITRt4QSUTKzLm+eCaDsdX8avmgWpmtmHAzesjBVUTAypz9odu5RKUjX5HNYA==
+
 text-table@^0.2.0:
   version "0.2.0"
   resolved "https://registry.yarnpkg.com/text-table/-/text-table-0.2.0.tgz#7f5ee823ae805207c00af2df4a84ec3fcfa570b4"
