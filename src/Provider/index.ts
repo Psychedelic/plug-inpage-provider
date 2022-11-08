@@ -1,6 +1,8 @@
 import { Agent, Actor, ActorSubclass, PublicKey } from "@dfinity/agent";
 import { Principal } from "@dfinity/principal";
 import { Buffer } from "buffer/";
+import { BinaryBlob, blobToUint8Array } from "@dfinity/candid";
+
 
 import getDomainMetadata from "../utils/domain-metadata";
 import {
@@ -349,4 +351,20 @@ export default class Provider implements ProviderInterface {
       false
     );
   };
+
+  public async signMessage(message: BinaryBlob): Promise<BinaryBlob> {
+    
+    const metadata = getDomainMetadata();
+    const base64Message = bufferToBase64(
+      Buffer.from(blobToUint8Array(message).buffer)
+    );
+    
+    const response = await this.clientRPC.call({
+      handler: "signMessage",
+      args: [metadata, base64Message],
+    });
+
+    return response;
+    
+  }
 }
