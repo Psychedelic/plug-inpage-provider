@@ -64,6 +64,7 @@
     "buffer": "^6.0.3",
     "buffer-crc32": "^0.2.13",
     "crypto-js": "^4.1.1",
-    "json-bigint": "^1.0.0"
+    "json-bigint": "^1.0.0",
+    "text-encoding-shim": "^1.0.5"
   }
 }

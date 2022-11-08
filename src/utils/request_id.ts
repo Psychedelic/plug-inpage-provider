@@ -9,6 +9,8 @@ import {
   lebEncode,
 } from "@dfinity/candid";
 import { Principal } from "@dfinity/principal";
+import { TextEncoder } from 'text-encoding-shim';
+
 
 export type RequestId = BinaryBlob & { __requestId__: void };
 /**
@@ -79,7 +81,7 @@ function hashValue(value: any): BinaryBlob {
 }
 
 const hashString = (value: string): BinaryBlob => {
-  const encoder = new TextEncoder();
+  const encoder = new TextEncoder('utf-8');
   const encoded = encoder.encode(value);
   return hash(Buffer.from(encoded));
 };
