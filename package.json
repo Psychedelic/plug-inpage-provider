@@ -1,6 +1,6 @@
 {
   "name": "@psychedelic/plug-inpage-provider",
-  "version": "2.4.0",
+  "version": "2.4.1",
   "main": "dist/src/index.js",
   "module": "dist/esm/src/index.js",
   "jsnext:main": "dist/esm/src/index.js",
