@@ -1,5 +1,4 @@
 import { IC_MAINNET_URLS, PLUG_PROXY_HOST } from "../../constants";
-import getDomainMetadata from "../../utils/domain-metadata";
 import RPCManager from "../RPCManager";
 
 import { RequestConnectParams, SerializedPublicKey } from "../../Provider/interfaces";
@@ -68,11 +67,10 @@ export default class SessionManager {
   // Maybe something like return !!this.sessionData
   public async getConnectionData(): Promise<ConnectionData | null> {
     if (!this.initialized) return null;
-    const metadata = getDomainMetadata();
     // Returns public key for now, see what we can do about connection data? 
     const connection =  await this.rpc.call({
       handler: "getConnectionData",
-      args: [metadata.url],
+      args: [],
     });
     let sessionData: SessionData = null;
     if (connection) {
@@ -86,11 +84,10 @@ export default class SessionManager {
 
   public async requestConnect(args: RequestConnectParams = {}): Promise<ConnectionData> {
     const { whitelist = [], host = PLUG_PROXY_HOST, timeout = 120000 } = args;
-    const metadata = getDomainMetadata();
 
     const publicKey = await this.rpc.call({
       handler: "requestConnect",
-      args: [metadata, whitelist, timeout, host],
+      args: [whitelist, timeout, host],
     });
     this.host = host;
     this.whitelist = whitelist;
@@ -101,11 +98,10 @@ export default class SessionManager {
   }
 
   public async disconnect(): Promise<void> {
-    const metadata = getDomainMetadata();
 
     await this.rpc.call({
       handler: "disconnect",
-      args: [metadata.url, this.sessionData?.principalId],
+      args: [this.sessionData?.principalId],
     });
     this.sessionData = null;
   }
