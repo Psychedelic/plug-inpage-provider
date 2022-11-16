@@ -19,7 +19,6 @@ import { Buffer } from "buffer/";
 import RPCManager from "../../modules/RPCManager";
 import { recursiveParseBigint } from "../bigint";
 import { base64ToBuffer, bufferToBase64 } from "../communication";
-import getDomainMetadata from "../domain-metadata";
 
 export const callMethodFactory =
   (clientRPC: RPCManager, batchTxId = "", idl: null | { [key: string]: any }) =>
@@ -32,7 +31,6 @@ export const callMethodFactory =
     },
     identity?: Identity | Promise<Identity>
   ): Promise<SubmitResponse> => {
-    const metadata = getDomainMetadata();
     let decodedArgs = null;
     if (idl) {
       decodedArgs = recursiveParseBigint(
@@ -45,7 +43,6 @@ export const callMethodFactory =
     const result = await clientRPC.call({
       handler: "requestCall",
       args: [
-        metadata,
         {
           canisterId: canisterId.toString(),
           methodName: options.methodName,
@@ -74,17 +71,14 @@ export const queryMethodFactory =
     fields: QueryFields,
     identity?: Identity | Promise<Identity>
   ): Promise<QueryResponse> => {
-    const metadata = getDomainMetadata();
 
     const result = await clientRPC.call({
       handler: "requestQuery",
       args: [
-        metadata,
         {
           canisterId: canisterId.toString(),
           methodName: fields.methodName,
           arg: bufferToBase64(Buffer.from(blobToUint8Array(fields.arg).buffer)),
-          url: getDomainMetadata().url,
         },
         batchTxId,
       ],
@@ -118,16 +112,12 @@ export const readStateMethodFactory =
     );
 
     try {
-      const metadata = getDomainMetadata();
-
       const result = await clientRPC.call({
         handler: "requestReadState",
         args: [
-          metadata,
           {
             canisterId: canisterId.toString(),
             paths,
-            url: getDomainMetadata().url,
           },
           batchTxId,
         ],
