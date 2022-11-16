@@ -47,7 +47,6 @@ export default class Provider implements ProviderInterface {
   private clientRPC: RPCManager;
   private sessionManager: SessionManager;
   private idls: ArgsTypesOfCanister = {};
-  private sarasa: string;
 
   static createWithWalletConnect(
     walletConnectOptions: WalletConnectOptions
@@ -73,7 +72,6 @@ export default class Provider implements ProviderInterface {
     this.clientRPC = new RPCManager({ instance: clientRPC });
     this.sessionManager = new SessionManager({ rpc: this.clientRPC });
     this.versions = versions;
-    this.sarasa = 'sarasa';
   }
 
   public async init() {
