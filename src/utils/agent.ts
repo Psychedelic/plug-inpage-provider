@@ -84,7 +84,6 @@ export const privateCreateAgent = async ({
 
 export const createAgent = async (
   clientRPC,
-  metadata,
   {
     whitelist = DEFAULT_CREATE_AGENT_ARGS.whitelist,
     host = DEFAULT_CREATE_AGENT_ARGS.host,
@@ -94,7 +93,7 @@ export const createAgent = async (
 ) => {
   const publicKey = await clientRPC.call({
     handler: "verifyWhitelist",
-    args: [metadata, whitelist],
+    args: [whitelist],
   });
   const agent = await privateCreateAgent({
     publicKey,

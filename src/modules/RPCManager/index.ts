@@ -1,5 +1,4 @@
 import { SimplifiedRPC } from "../../Provider/interfaces";
-import getDomainMetadata from "../../utils/domain-metadata";
 
 const DEFAULT_CONFIG = {
   timeout: 0,
@@ -17,8 +16,6 @@ export default class RPCManager {
   }
 
   public async call({ handler, args, config = DEFAULT_CONFIG }): Promise<any> {
-    const metadata = getDomainMetadata();
-
     const handleCallSuccess = (result) => result;
     const handleCallFailure = async (error) => {
       const { message } = error || {};
@@ -26,7 +23,7 @@ export default class RPCManager {
         message === "Request Timeout" ? "handleTimeout" : "handleError";
       return await this.instance.call(
         errorHandler,
-        [metadata, message],
+        [message],
         DEFAULT_CONFIG
       );
     };

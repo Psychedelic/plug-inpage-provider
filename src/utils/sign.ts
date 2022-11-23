@@ -2,7 +2,6 @@ import { IDL, JsonValue } from "@dfinity/candid";
 import { Buffer } from "buffer/";
 import { Transaction } from "../Provider/interfaces";
 import { recursiveParseBigint } from "./bigint";
-import getDomainMetadata from "./domain-metadata";
 
 export interface SignInfo {
   methodName?: string;
@@ -78,7 +77,6 @@ export const decodeArgs = (
 export const signFactory =
   (clientRPC, argsTypes: ArgsTypesOfCanister, preApprove: boolean = false) =>
   async (payload: ArrayBuffer, signInfo?: SignInfo): Promise<ArrayBuffer> => {
-    const metadata = getDomainMetadata();
     const payloadArr = new Uint8Array(payload);
 
     if (signInfo)
@@ -88,7 +86,7 @@ export const signFactory =
 
     const res = await clientRPC.call({
       handler: "requestSign",
-      args: [payloadArr, metadata, { ...signInfo, preApprove }],
+      args: [payloadArr, { ...signInfo, preApprove }],
     });
     return new Uint8Array(Object.values(res));
   };

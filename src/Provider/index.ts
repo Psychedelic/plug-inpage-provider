@@ -4,7 +4,6 @@ import { Buffer } from "buffer/";
 import { BinaryBlob, blobToUint8Array } from "@dfinity/candid";
 
 
-import getDomainMetadata from "../utils/domain-metadata";
 import {
   managementCanisterIdlFactory,
   managementCanisterPrincipal,
@@ -93,12 +92,10 @@ export default class Provider implements ProviderInterface {
       throw Error("a canisterId valid is a required argument");
     if (!interfaceFactory)
       throw Error("interfaceFactory is a required argument");
-    const metadata = getDomainMetadata();
     this.idls[canisterId] = getArgTypes(interfaceFactory);
     const connectionData = await this.sessionManager.getConnectionData();
     const agent = await createAgent(
       this.clientRPC,
-      metadata,
       { whitelist: [canisterId], host: connectionData?.connection?.host },
       getArgTypes(interfaceFactory)
     );
@@ -109,14 +106,13 @@ export default class Provider implements ProviderInterface {
   public async getPrincipal(
     { asString } = { asString: false }
   ): Promise<Principal | string> {
-    const metadata = getDomainMetadata();
     const principal = this.principalId;
     if (principal) {
       return asString ? principal.toString() : Principal.from(principal);
     } else {
       const response = await this.clientRPC.call({
         handler: "getPrincipal",
-        args: [metadata.url],
+        args: [],
       });
 
       if (response && asString) {
@@ -155,11 +151,9 @@ export default class Provider implements ProviderInterface {
     whitelist,
     host,
   }: CreateAgentParams = {}): Promise<any> {
-    const metadata = getDomainMetadata();
 
     this.agent = await createAgent(
       this.clientRPC,
-      metadata,
       { whitelist, host },
       null
     );
@@ -168,11 +162,10 @@ export default class Provider implements ProviderInterface {
   }
 
   public async requestBalance(accountId = null): Promise<bigint> {
-    const metadata = getDomainMetadata();
 
     const balances = await this.clientRPC.call({
       handler: "requestBalance",
-      args: [metadata, accountId],
+      args: [accountId],
     });
     return balances.map((balance) => {
       // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -182,18 +175,16 @@ export default class Provider implements ProviderInterface {
   }
 
   public async requestTransfer(params: RequestTransferParams): Promise<bigint> {
-    const metadata = getDomainMetadata();
 
     return await this.clientRPC.call({
       handler: "requestTransfer",
-      args: [metadata, params],
+      args: [params],
     });
   }
 
   // public async requestTransferToken(
   //   params: RequestTransTokenferParams
   // ): Promise<string> {
-  //   const metadata = getDomainMetadata();
 
   //   return await this.clientRPC.call({
   //     handler: "requestTransferToken",
@@ -204,7 +195,6 @@ export default class Provider implements ProviderInterface {
   public async batchTransactions(
     transactions: Transaction[]
   ): Promise<boolean> {
-    const metadata = getDomainMetadata();
 
     const canisterList = transactions.map(
       (transaction) => transaction.canisterId
@@ -224,14 +214,13 @@ export default class Provider implements ProviderInterface {
 
     const batchResponse = await this.clientRPC.call({
       handler: "batchTransactions",
-      args: [metadata, signInfo],
+      args: [signInfo],
     });
 
     if (!batchResponse.status) return false;
 
     const agent = await createAgent(
       this.clientRPC,
-      metadata,
       {
         whitelist: canisterList,
         host: connectionData?.connection?.host,
@@ -293,20 +282,18 @@ export default class Provider implements ProviderInterface {
   }
 
   public async getICNSInfo(): Promise<ICNSInfo> {
-    const metadata = getDomainMetadata();
 
     return await this.clientRPC.call({
       handler: "getICNSInfo",
-      args: [metadata],
+      args: [],
     });
   }
 
   public async requestBurnXTC(params: RequestBurnXTCParams): Promise<any> {
-    const metadata = getDomainMetadata();
 
     return await this.clientRPC.call({
       handler: "requestBurnXTC",
-      args: [metadata, params],
+      args: [params],
     });
   }
 
@@ -328,11 +315,10 @@ export default class Provider implements ProviderInterface {
   public async requestImportToken(
     params: RequestImportTokenParams
   ): Promise<any> {
-    const metadata = getDomainMetadata();
 
     return await this.clientRPC.call({
       handler: "requestImportToken",
-      args: [metadata, params],
+      args: [params],
     });
   }
 
