@@ -111,7 +111,7 @@ export interface ProviderInterface {
   principal?: string;
   accountId?: string;
   getICNSInfo: () => Promise<ICNSInfo>;
-  signMessage: (message: BinaryBlob) => Promise<BinaryBlob>;
+  signMessage: (message: BinaryBlob | Buffer | ArrayBuffer) => Promise<BinaryBlob>;
 }
 
 export interface SerializedPublicKey {

@@ -1,7 +1,7 @@
 import { Agent, Actor, ActorSubclass, PublicKey } from "@dfinity/agent";
 import { Principal } from "@dfinity/principal";
 import { Buffer } from "buffer/";
-import { BinaryBlob, blobToHex } from "@dfinity/candid";
+import { BinaryBlob, blobToUint8Array } from "@dfinity/candid";
 
 
 import getDomainMetadata from "../utils/domain-metadata";
@@ -359,7 +359,7 @@ export default class Provider implements ProviderInterface {
     if (message instanceof ArrayBuffer) {
       return bufferToBase64(Buffer.from(message));
     }
-    return blobToHex(message);
+    return bufferToBase64(Buffer.from(blobToUint8Array(message)));
   }
 
   public async signMessage(message: BinaryBlob | Buffer | ArrayBuffer): Promise<BinaryBlob> {
