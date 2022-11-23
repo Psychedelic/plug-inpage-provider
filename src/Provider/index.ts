@@ -1,6 +1,8 @@
 import { Agent, Actor, ActorSubclass, PublicKey } from "@dfinity/agent";
 import { Principal } from "@dfinity/principal";
 import { Buffer } from "buffer/";
+import { BinaryBlob } from "@dfinity/candid";
+
 
 import {
   managementCanisterIdlFactory,
@@ -12,6 +14,7 @@ import {
   getArgTypes,
   ArgsTypesOfCanister,
   getSignInfoFromTransaction,
+  parseMessageToString,
 } from "../utils/sign";
 import { createActor, createAgent, CreateAgentParams } from "../utils/agent";
 import { recursiveParseBigint } from "../utils/bigint";
@@ -335,4 +338,15 @@ export default class Provider implements ProviderInterface {
       false
     );
   };
+
+  public async signMessage(message: BinaryBlob | Buffer | ArrayBuffer): Promise<BinaryBlob> {
+    const messageToSign = parseMessageToString(message);
+    const response = await this.clientRPC.call({
+      handler: "requestSignMessage",
+      args: [messageToSign],
+    });
+    console.log(response)
+    return response;
+
+  }
 }
