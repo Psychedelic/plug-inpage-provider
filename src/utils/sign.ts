@@ -1,7 +1,8 @@
-import { IDL, JsonValue } from "@dfinity/candid";
+import { BinaryBlob, blobToUint8Array, IDL, JsonValue } from "@dfinity/candid";
 import { Buffer } from "buffer/";
 import { Transaction } from "../Provider/interfaces";
 import { recursiveParseBigint } from "./bigint";
+import { bufferToBase64 } from "./communication";
 
 export interface SignInfo {
   methodName?: string;
@@ -99,3 +100,13 @@ export const getArgTypes = (interfaceFactory: IDL.InterfaceFactory) => {
   );
   return methodArgType;
 };
+
+export const parseMessageToString = (message: BinaryBlob | Buffer | ArrayBuffer) => {
+  if (message instanceof Buffer) {
+    return bufferToBase64(message);
+  }
+  if (message instanceof ArrayBuffer) {
+    return bufferToBase64(Buffer.from(message));
+  }
+  return bufferToBase64(Buffer.from(blobToUint8Array(message)));
+}
